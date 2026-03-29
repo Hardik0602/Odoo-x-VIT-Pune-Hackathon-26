@@ -54,18 +54,52 @@ const ManagerApprovals = () => {
   }, [user?.email, user?.role])
 
   const approve = async (expenseId) => {
+    const expense = expenses.find(exp => exp.id === expenseId)
+    if (!expense) return
+    if (expense.status !== 'pending') {
+      toast.info('Expense is already processed')
+      return
+    }
+
+    const existingApprovals = expense.approvals ?? []
+    if (existingApprovals.some(a => a.by === user?.email)) {
+      toast.info('You already reviewed this expense')
+      return
+    }
+
+    const newApproval = {
+      by: user?.email,
+      role: user?.role,
+      decision: 'approved',
+      date: new Date().toISOString(),
+      comment: comment || ''
+    }
+
+    const updatedApprovals = [...existingApprovals, newApproval]
+
+    const isCfoOverride = user?.role?.toLowerCase() === 'cfo'
+    const approvedCount = updatedApprovals.filter(a => a.decision === 'approved').length
+    const threshold = 3 // fixed chain size for rule implementation
+    const metPercentageRule = (approvedCount / threshold) >= 0.6
+
+    let newStatus = 'pending'
+    if (isCfoOverride) {
+      newStatus = 'approved'
+    } else if (metPercentageRule) {
+      newStatus = 'approved'
+    }
+
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'approved' })
+        body: JSON.stringify({ status: newStatus, approvals: updatedApprovals })
       })
 
       if (res.ok) {
         toast.success(`Approved!${comment ? ` Comment: ${comment}` : ''}`)
-        // Refresh expenses
         setExpenses(prev => prev.map(exp =>
-          exp.id === expenseId ? { ...exp, status: 'approved' } : exp
+          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals } : exp
         ))
       } else {
         toast.error('Failed to approve expense')
@@ -77,18 +111,41 @@ const ManagerApprovals = () => {
   }
 
   const reject = async (expenseId) => {
+    const expense = expenses.find(exp => exp.id === expenseId)
+    if (!expense) return
+    if (expense.status !== 'pending') {
+      toast.info('Expense is already processed')
+      return
+    }
+
+    const existingApprovals = expense.approvals ?? []
+    if (existingApprovals.some(a => a.by === user?.email)) {
+      toast.info('You already reviewed this expense')
+      return
+    }
+
+    const newApproval = {
+      by: user?.email,
+      role: user?.role,
+      decision: 'rejected',
+      date: new Date().toISOString(),
+      comment: comment || ''
+    }
+
+    const updatedApprovals = [...existingApprovals, newApproval]
+    const newStatus = 'rejected'
+
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected' })
+        body: JSON.stringify({ status: newStatus, approvals: updatedApprovals })
       })
 
       if (res.ok) {
         toast.error(`Rejected.${comment ? ` Comment: ${comment}` : ''}`)
-        // Refresh expenses
         setExpenses(prev => prev.map(exp =>
-          exp.id === expenseId ? { ...exp, status: 'rejected' } : exp
+          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals } : exp
         ))
       } else {
         toast.error('Failed to reject expense')

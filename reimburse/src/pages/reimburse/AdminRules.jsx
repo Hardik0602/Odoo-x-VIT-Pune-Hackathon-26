@@ -6,6 +6,18 @@ const Tog = ({ initial = true }) => {
 }
 
 const AdminRules = () => {
+  const [approvers, setApprovers] = useState([
+    ['1', 'Manager', 'Required', true],
+    ['2', 'CFO ⭐', 'Required', true],
+    ['3', 'Director ⭐', 'Required', false]
+  ])
+
+  const addCEO = () => {
+    const hasCEO = approvers.some(([, label]) => label.toLowerCase().startsWith('ceo'))
+    if (hasCEO) return
+    setApprovers(prev => [...prev, ['4', 'CEO ⭐', 'Required', false]])
+  }
+
   return (
     <div className='view'>
       <div className='ph'>
@@ -13,9 +25,6 @@ const AdminRules = () => {
           <div className='pt'>Approval rules</div>
           <div className='ps'>Configure sequential approver chains and conditional auto-approval logic</div>
         </div>
-        <button type='button' className='btn bp'>
-          + New rule
-        </button>
       </div>
       <div className='rb-two-col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
         <div className='panel'>
@@ -33,20 +42,16 @@ const AdminRules = () => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div className='av' style={{ width: 24, height: 24, fontSize: 9, background: 'linear-gradient(135deg,#5B9CF6,#A78BFA)' }}>
-                  VS
+                  M
                 </div>
-                <div style={{ fontSize: 13 }}>Vikram Singh</div>
+                <div style={{ fontSize: 13 }}>Manager</div>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>↓ then chain proceeds</div>
               </div>
             </div>
             <div style={{ padding: '13px 17px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 10 }}>APPROVERS — sequential order</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  ['1', 'John (Manager)', 'Required', true],
-                  ['2', 'Mitchell (Finance)', 'Required', true],
-                  ['3', 'Ananya (Director)', 'Required', false]
-                ].map(([num, label, req, on]) => (
+                {approvers.map(([num, label, req, on]) => (
                   <div
                     key={num}
                     style={{
@@ -62,16 +67,24 @@ const AdminRules = () => {
                     <div className='snum'>{num}</div>
                     <select className='fi' style={{ flex: 1, padding: '6px 10px', fontSize: 13 }}>
                       <option>{label}</option>
-                      <option>Vikram Singh</option>
-                      <option>Rahul — Finance</option>
+                      <option>Manager</option>
+                      <option>CFO</option>
+                      <option>Director</option>
                     </select>
                     <span style={{ fontSize: 11.5, color: 'var(--text2)' }}>{req}</span>
                     <Tog initial={on} />
                   </div>
                 ))}
-                <button type='button' className='btn bg' style={{ fontSize: 12, padding: 7, width: '100%', justifyContent: 'center' }}>
-                  + Add approver
-                </button>
+                {!approvers.some(([ , label ]) => label.toLowerCase().startsWith('ceo')) && (
+                  <button
+                    type='button'
+                    className='btn bg'
+                    style={{ fontSize: 12, padding: 7, width: '100%', justifyContent: 'center' }}
+                    onClick={addCEO}
+                  >
+                    + Add CEO
+                  </button>
+                )}
               </div>
             </div>
             <div style={{ padding: '13px 17px', borderBottom: '1px solid var(--border)' }}>
@@ -140,7 +153,7 @@ const AdminRules = () => {
                 <svg width='14' height='14' viewBox='0 0 14 14' fill='none' style={{ color: 'var(--text3)', flexShrink: 0 }}>
                   <path d='M2 7h10M8 4l3 3-3 3' stroke='currentColor' strokeWidth='1.2' strokeLinecap='round' />
                 </svg>
-                {['John', 'Mitchell', 'Ananya'].map((name, i) => (
+                {['CFO', 'Director'].map((name, i) => (
                   <React.Fragment key={name}>
                     {i > 0 && (
                       <svg width='14' height='14' viewBox='0 0 14 14' fill='none' style={{ color: 'var(--text3)', flexShrink: 0 }}>
@@ -208,15 +221,11 @@ const AdminRules = () => {
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{rule.t}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--text2)', marginTop: 2 }}>{rule.d}</div>
                   </div>
-                  <Tog initial={rule.on} />
                 </div>
               ))}
             </div>
           </div>
 
-          <button type='button' className='btn bp' style={{ width: '100%', justifyContent: 'center' }}>
-            Save rule changes
-          </button>
         </div>
       </div>
     </div>
