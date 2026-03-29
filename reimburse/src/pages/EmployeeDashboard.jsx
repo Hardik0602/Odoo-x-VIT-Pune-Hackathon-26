@@ -93,7 +93,7 @@ const EmployeeDashboard = () => {
         )}
       </div>
       <div className='stat-row'>
-        {/* Stats will be populated from database */}
+        {/* Stats from database */}
       </div>
       <div className='sl'>Recent expenses</div>
       <div className='tw'>

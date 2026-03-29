@@ -26,8 +26,6 @@ const router = createBrowserRouter(
         }
       >
         <Route index element={<Navigate to='/employee/dashboard' replace />} />
-
-        {/* Employee Routes */}
         <Route
           path='employee/dashboard'
           element={
@@ -52,8 +50,6 @@ const router = createBrowserRouter(
             </RoleProtectedRoute>
           }
         />
-
-        {/* Manager Routes */}
         <Route
           path='manager/approvals'
           element={
@@ -70,8 +66,6 @@ const router = createBrowserRouter(
             </RoleProtectedRoute>
           }
         />
-
-        {/* Admin Routes */}
         <Route
           path='admin/users'
           element={
@@ -100,7 +94,6 @@ const router = createBrowserRouter(
     </>
   )
 )
-
 export default function App() {
   return <RouterProvider router={router} />
 }

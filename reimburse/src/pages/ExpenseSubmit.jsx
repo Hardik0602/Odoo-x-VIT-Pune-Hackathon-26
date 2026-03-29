@@ -212,7 +212,6 @@ const ExpenseSubmit = () => {
     textAlign: 'center'
   }}
 >
-  {/* Hidden input */}
   <input
     type="file"
     accept="image/*"
