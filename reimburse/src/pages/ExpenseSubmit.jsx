@@ -106,49 +106,44 @@ const ExpenseSubmit = () => {
       setLoading(false)
     }
   }
-
+  const [ocrLoading, setOcrLoading] = useState(false)
   const handleOCR = async (file) => {
-  if (!file) return
+    if (!file) return
 
-  setOcrLoading(true)
+    setOcrLoading(true)
 
-  try {
-    const {
-      data: { text }
-    } = await Tesseract.recognize(file, 'eng', {
-      logger: m => console.log(m)
-    })
+    try {
+      const {
+        data: { text }
+      } = await Tesseract.recognize(file, 'eng', {
+        logger: m => console.log(m)
+      })
 
-    console.log('OCR TEXT:', text)
+      console.log('OCR TEXT:', text)
 
-    // 💰 Extract amount
-    const amountMatch = text.match(/(\d+[\.,]\d{2})/)
-    if (amountMatch) {
-      setAmount(amountMatch[0].replace(',', ''))
+      const amountMatch = text.match(/(\d+[\.,]\d{2})/)
+      if (amountMatch) {
+        setAmount(amountMatch[0].replace(',', ''))
+      }
+      const dateMatch = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)
+      if (dateMatch) {
+        const parts = dateMatch[0].split(/[\/\-]/)
+        setDate(`${parts[2]}-${parts[1]}-${parts[0]}`)
+      }
+      const lines = text.split('\n').filter(l => l.trim().length > 3)
+      if (lines.length > 0) {
+        setDesc(lines[0])
+      }
+
+      toast.success('OCR completed — fields auto-filled 🎉')
+
+    } catch (err) {
+      console.error(err)
+      toast.error('OCR failed')
+    } finally {
+      setOcrLoading(false)
     }
-
-    // 📅 Extract date (DD/MM/YYYY or DD-MM-YYYY)
-    const dateMatch = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)
-    if (dateMatch) {
-      const parts = dateMatch[0].split(/[\/\-]/)
-      setDate(`${parts[2]}-${parts[1]}-${parts[0]}`)
-    }
-
-    // 📝 Extract description (first meaningful line)
-    const lines = text.split('\n').filter(l => l.trim().length > 3)
-    if (lines.length > 0) {
-      setDesc(lines[0])
-    }
-
-    toast.success('OCR completed — fields auto-filled 🎉')
-
-  } catch (err) {
-    console.error(err)
-    toast.error('OCR failed')
-  } finally {
-    setOcrLoading(false)
   }
-}
 
   return (
     <div className='view'>
@@ -198,210 +193,210 @@ const ExpenseSubmit = () => {
             </div>
             <div className='pb'>
               <div
-  role='button'
-  tabIndex={0}
-  onClick={() => document.getElementById('receiptUpload').click()}
-  onKeyDown={e => e.key === 'Enter' && document.getElementById('receiptUpload').click()}
-  style={{
-    border: '1.5px dashed var(--border2)',
-    borderRadius: 'var(--r)',
-    padding: 20,
-    cursor: 'pointer',
-    transition: 'all .2s',
-    background: 'var(--surface2)',
-    textAlign: 'center'
-  }}
->
-  <input
-    type="file"
-    accept="image/*"
-    style={{ display: 'none' }}
-    id="receiptUpload"
-    onChange={(e) => handleOCR(e.target.files[0])}
-  />
-
-  {ocrLoading ? (
-    <div style={{ fontSize: 13.5, fontWeight: 500 }}>
-      🔍 Scanning receipt...
-    </div>
-  ) : (
-    <>
-      <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>
-        📎 Upload or drag receipt here (optional)
-      </div>
-      <div style={{ fontSize: 12, color: 'var(--text3)' }}>
-        PNG, JPG supported
-      </div>
-    </>
-  )}
-</div>
-                <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>📎 Upload or drag receipt here (optional)</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>PNG, JPG or PDF</div>
-              </div>
-            </div>
-          </div>
-
-          <div className='panel'>
-            <div className='ph2'>
-              <div className='pt2'>Expense details</div>
-            </div>
-            <div className='pb'>
-              <div className='fg2'>
-                <div className='fg full'>
-                  <label className='fl' htmlFor='fdesc'>
-                    Description
-                  </label>
-                  <input
-                    id='fdesc'
-                    className='fi'
-                    type='text'
-                    placeholder='e.g. Client lunch'
-                    value={desc}
-                    onChange={e => setDesc(e.target.value)}
-                  />
-                </div>
-                <div className='fg'>
-                  <label className='fl' htmlFor='fcat'>
-                    Category
-                  </label>
-                  <select id='fcat' className='fi' value={category} onChange={e => setCategory(e.target.value)}>
-                    <option>🍽 Meals</option>
-                    <option>✈ Travel</option>
-                    <option>🏨 Accommodation</option>
-                    <option>☁ Software</option>
-                    <option>🖥 Hardware</option>
-                    <option>🎉 Events</option>
-                    <option>📦 Other</option>
-                  </select>
-                </div>
-                <div className='fg'>
-                  <label className='fl' htmlFor='fpaid'>
-                    Paid by
-                  </label>
-                  <select id='fpaid' className='fi' defaultValue='Self'>
-                    <option>Self</option>
-                    <option>Company card</option>
-                  </select>
-                </div>
-                <div className='fg'>
-                  <label className='fl' htmlFor='famt'>
-                    Amount — employee can use any currency
-                  </label>
-                  <div className='fig'>
-                    <select id='fcurr' className='fic' value={currKey} onChange={e => setCurrKey(e.target.value)}>
-                      <option value='INR|₹|1'>INR ₹</option>
-                      <option value='USD|$|83.41'>USD $</option>
-                      <option value='EUR|€|90.2'>EUR €</option>
-                      <option value='GBP|£|105.5'>GBP £</option>
-                      <option value='SGD|S$|61.8'>SGD S$</option>
-                    </select>
-                    <input
-                      id='famt'
-                      className='fi'
-                      type='number'
-                      value={amount}
-                      placeholder='0.00'
-                      onChange={e => setAmount(e.target.value)}
-                    />
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginTop: 4 }}>{convLine}</div>
-                </div>
-                <div className='fg'>
-                  <label className='fl' htmlFor='fdate'>
-                    Date of expense
-                  </label>
-                  <input id='fdate' className='fi' type='date' value={date} onChange={e => setDate(e.target.value)} />
-                </div>
-                <div className='fg full'>
-                  <label className='fl' htmlFor='fnotes'>
-                    Notes (optional)
-                  </label>
-                  <textarea
-                    id='fnotes'
-                    className='fi'
-                    rows={2}
-                    style={{ resize: 'none' }}
-                    placeholder='Context for approvers…'
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className='div' />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>
-                  Converted to{' '}
-                  <span style={{ color: 'var(--text)' }}>
-                    {sym} {code}
-                  </span>{' '}
-                  (company currency) on submit
-                </div>
-                <div style={{ display: 'flex', gap: 7 }}>
-                  <button type='button' className='btn bg'>
-                    Save draft
-                  </button>
-                  <button type='button' className='btn bp' onClick={submit} disabled={loading}>
-                    {loading ? 'Submitting...' : 'Submit for approval →'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className='panel' style={{ marginBottom: 14 }}>
-            <div className='ph2'>
-              <div className='pt2'>Approval route preview</div>
-            </div>
-            <div className='pb'>
-              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 13 }}>Based on your manager & active rule:</div>
-              <div className='tl'>
-                <div className='tli'>
-                  <div className='tldot act'>1</div>
-                  <div className='tlline' />
-                  <div className='tlc'>
-                    <div className='tlt'>Manager (IS_MANAGER_APPROVER ✓)</div>
-                    <div className='tls'>Vikram Singh — approves first</div>
-                  </div>
-                </div>
-                <div className='tli'>
-                  <div className='tldot idle'>2</div>
-                  <div className='tlline' />
-                  <div className='tlc'>
-                    <div className='tlt'>Finance</div>
-                    <div className='tls'>Rahul — Finance lead</div>
-                  </div>
-                </div>
-                <div className='tli'>
-                  <div className='tldot idle'>3</div>
-                  <div className='tlc'>
-                    <div className='tlt'>Director</div>
-                    <div className='tls'>Ananya Sharma</div>
-                  </div>
-                </div>
-              </div>
-              <div className='div' />
-              <div
+                role='button'
+                tabIndex={0}
+                onClick={() => document.getElementById('receiptUpload').click()}
+                onKeyDown={e => e.key === 'Enter' && document.getElementById('receiptUpload').click()}
                 style={{
+                  border: '1.5px dashed var(--border2)',
+                  borderRadius: 'var(--r)',
+                  padding: 20,
+                  cursor: 'pointer',
+                  transition: 'all .2s',
                   background: 'var(--surface2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 7,
-                  padding: '10px 12px',
-                  fontSize: 12,
-                  color: 'var(--text2)'
+                  textAlign: 'center'
                 }}
               >
-                <div style={{ color: 'var(--accent)', fontFamily: 'var(--font-m)', fontSize: 9.5, marginBottom: 4 }}>
-                  CONDITIONAL RULE ACTIVE
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="receiptUpload"
+                  onChange={(e) => handleOCR(e.target.files[0])}
+                />
+
+                {ocrLoading ? (
+                  <div style={{ fontSize: 13.5, fontWeight: 500 }}>
+                    🔍 Scanning receipt...
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>
+                      📎 Upload or drag receipt here (optional)
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+                      PNG, JPG supported
+                    </div>
+                  </>
+                )}
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>📎 Upload or drag receipt here (optional)</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>PNG, JPG or PDF</div>
+            </div>
+          </div>
+        </div>
+
+        <div className='panel'>
+          <div className='ph2'>
+            <div className='pt2'>Expense details</div>
+          </div>
+          <div className='pb'>
+            <div className='fg2'>
+              <div className='fg full'>
+                <label className='fl' htmlFor='fdesc'>
+                  Description
+                </label>
+                <input
+                  id='fdesc'
+                  className='fi'
+                  type='text'
+                  placeholder='e.g. Client lunch'
+                  value={desc}
+                  onChange={e => setDesc(e.target.value)}
+                />
+              </div>
+              <div className='fg'>
+                <label className='fl' htmlFor='fcat'>
+                  Category
+                </label>
+                <select id='fcat' className='fi' value={category} onChange={e => setCategory(e.target.value)}>
+                  <option>🍽 Meals</option>
+                  <option>✈ Travel</option>
+                  <option>🏨 Accommodation</option>
+                  <option>☁ Software</option>
+                  <option>🖥 Hardware</option>
+                  <option>🎉 Events</option>
+                  <option>📦 Other</option>
+                </select>
+              </div>
+              <div className='fg'>
+                <label className='fl' htmlFor='fpaid'>
+                  Paid by
+                </label>
+                <select id='fpaid' className='fi' defaultValue='Self'>
+                  <option>Self</option>
+                  <option>Company card</option>
+                </select>
+              </div>
+              <div className='fg'>
+                <label className='fl' htmlFor='famt'>
+                  Amount — employee can use any currency
+                </label>
+                <div className='fig'>
+                  <select id='fcurr' className='fic' value={currKey} onChange={e => setCurrKey(e.target.value)}>
+                    <option value='INR|₹|1'>INR ₹</option>
+                    <option value='USD|$|83.41'>USD $</option>
+                    <option value='EUR|€|90.2'>EUR €</option>
+                    <option value='GBP|£|105.5'>GBP £</option>
+                    <option value='SGD|S$|61.8'>SGD S$</option>
+                  </select>
+                  <input
+                    id='famt'
+                    className='fi'
+                    type='number'
+                    value={amount}
+                    placeholder='0.00'
+                    onChange={e => setAmount(e.target.value)}
+                  />
                 </div>
-                Auto-approved if <strong style={{ color: 'var(--text)' }}>60%</strong> of approvers approve, OR if{' '}
-                <strong style={{ color: 'var(--text)' }}>CFO</strong> approves.
+                <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginTop: 4 }}>{convLine}</div>
+              </div>
+              <div className='fg'>
+                <label className='fl' htmlFor='fdate'>
+                  Date of expense
+                </label>
+                <input id='fdate' className='fi' type='date' value={date} onChange={e => setDate(e.target.value)} />
+              </div>
+              <div className='fg full'>
+                <label className='fl' htmlFor='fnotes'>
+                  Notes (optional)
+                </label>
+                <textarea
+                  id='fnotes'
+                  className='fi'
+                  rows={2}
+                  style={{ resize: 'none' }}
+                  placeholder='Context for approvers…'
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className='div' />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+                Converted to{' '}
+                <span style={{ color: 'var(--text)' }}>
+                  {sym} {code}
+                </span>{' '}
+                (company currency) on submit
+              </div>
+              <div style={{ display: 'flex', gap: 7 }}>
+                <button type='button' className='btn bg'>
+                  Save draft
+                </button>
+                <button type='button' className='btn bp' onClick={submit} disabled={loading}>
+                  {loading ? 'Submitting...' : 'Submit for approval →'}
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <div>
+        <div className='panel' style={{ marginBottom: 14 }}>
+          <div className='ph2'>
+            <div className='pt2'>Approval route preview</div>
+          </div>
+          <div className='pb'>
+            <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 13 }}>Based on your manager & active rule:</div>
+            <div className='tl'>
+              <div className='tli'>
+                <div className='tldot act'>1</div>
+                <div className='tlline' />
+                <div className='tlc'>
+                  <div className='tlt'>Manager (IS_MANAGER_APPROVER ✓)</div>
+                  <div className='tls'>Vikram Singh — approves first</div>
+                </div>
+              </div>
+              <div className='tli'>
+                <div className='tldot idle'>2</div>
+                <div className='tlline' />
+                <div className='tlc'>
+                  <div className='tlt'>Finance</div>
+                  <div className='tls'>Rahul — Finance lead</div>
+                </div>
+              </div>
+              <div className='tli'>
+                <div className='tldot idle'>3</div>
+                <div className='tlc'>
+                  <div className='tlt'>Director</div>
+                  <div className='tls'>Ananya Sharma</div>
+                </div>
+              </div>
+            </div>
+            <div className='div' />
+            <div
+              style={{
+                background: 'var(--surface2)',
+                border: '1px solid var(--border)',
+                borderRadius: 7,
+                padding: '10px 12px',
+                fontSize: 12,
+                color: 'var(--text2)'
+              }}
+            >
+              <div style={{ color: 'var(--accent)', fontFamily: 'var(--font-m)', fontSize: 9.5, marginBottom: 4 }}>
+                CONDITIONAL RULE ACTIVE
+              </div>
+              Auto-approved if <strong style={{ color: 'var(--text)' }}>60%</strong> of approvers approve, OR if{' '}
+              <strong style={{ color: 'var(--text)' }}>CFO</strong> approves.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
