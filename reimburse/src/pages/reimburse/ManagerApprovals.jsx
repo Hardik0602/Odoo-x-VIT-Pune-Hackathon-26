@@ -83,7 +83,8 @@ const ManagerApprovals = () => {
 
     const updatedApprovals = [...existingApprovals, newApproval]
 
-    const isCfoOverride = user?.role?.toLowerCase() === 'cfo'
+    const normalizedName = user?.name?.toLowerCase()
+    const isCfoOverride = user?.role?.toLowerCase() === 'cfo' || normalizedName === 'cfo'
     const approvedCount = updatedApprovals.filter(a => a.decision === 'approved').length
     const threshold = 3 // fixed chain size for rule implementation
     const metPercentageRule = (approvedCount / threshold) >= 0.6
@@ -130,6 +131,9 @@ const ManagerApprovals = () => {
       return
     }
 
+    const normalizedName = user?.name?.toLowerCase()
+    const isDirectorReject = user?.role?.toLowerCase() === 'director' || normalizedName === 'director'
+
     const newApproval = {
       by: user?.email,
       role: user?.role,
@@ -139,7 +143,7 @@ const ManagerApprovals = () => {
     }
 
     const updatedApprovals = [...existingApprovals, newApproval]
-    const newStatus = 'rejected'
+    const newStatus = isDirectorReject ? 'rejected' : 'rejected'
 
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {

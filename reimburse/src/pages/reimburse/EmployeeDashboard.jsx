@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getAllUsers } from '../../data/userStore'
 
 const EmployeeDashboard = () => {
   const { user } = useAuth()
@@ -20,13 +21,28 @@ const EmployeeDashboard = () => {
         const res = await fetch('http://localhost:3000/expenses')
         const data = await res.json()
         let filtered = data
-        
+
+        const allUsers = getAllUsers()
+        const userRole = user?.role?.toLowerCase()
+        const userName = user?.name?.toLowerCase()
+
         if (isAdminAll) {
+          // Admin sees everything
           filtered = data
+        } else if (isManagerMy || userRole === 'manager' || userRole === 'cfo' || userRole === 'director' || userName === 'cfo' || userName === 'director') {
+          // Manager, CFO, Director see their team plus CFO/Director special
+          if (userRole === 'cfo' || userRole === 'director' || userName === 'cfo' || userName === 'director') {
+            const allEmployees = allUsers.filter(u => u.role?.toLowerCase() === 'employee')
+            filtered = data.filter(exp => allEmployees.some(emp => emp.email === exp.submittedBy))
+          } else {
+            const myEmployees = allUsers.filter(u => u.role?.toLowerCase() === 'employee' && u.manager === user?.email)
+            filtered = data.filter(exp => myEmployees.some(emp => emp.email === exp.submittedBy))
+          }
         } else {
+          // Regular employee sees only own
           filtered = data.filter(e => e.submittedBy === user?.email)
         }
-        
+
         setExpenses(filtered)
       } catch (error) {
         console.log('Error loading expenses:', error)
