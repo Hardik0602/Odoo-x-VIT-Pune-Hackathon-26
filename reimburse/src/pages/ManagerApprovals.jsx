@@ -114,19 +114,6 @@ const ManagerApprovals = () => {
 
     const updatedApprovals = [...existingApprovals, newApproval]
 
-<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
-=======
-    const isCfoOverride = user?.role?.toLowerCase() === 'cfo'
-    const approvedCount = updatedApprovals.filter(a => a.decision === 'approved').length
-    const threshold = 3
-    const metPercentageRule = (approvedCount / threshold) >= 0.6
-
-    let newStatus = 'pending'
-    if (existingApprovals.length === 0 || isCfoOverride || metPercentageRule) {
-      newStatus = 'approved'
-    }
-
->>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
         method: 'PATCH',
@@ -136,11 +123,6 @@ const ManagerApprovals = () => {
 
       if (res.ok) {
         toast.success(`Approved!${comment ? ` Comment: ${comment}` : ''}`)
-<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
-        setExpenses(prev => prev.map(exp =>
-          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals, approvalStep: newStep } : exp
-        ))
-=======
         setExpenses(prev => {
           const newList = prev.filter(exp => exp.id !== expenseId)
           if (newList.length > 0) {
@@ -151,7 +133,6 @@ const ManagerApprovals = () => {
           return newList
         })
         setComment('')
->>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
       } else {
         toast.error('Failed to approve expense')
       }
@@ -401,13 +382,8 @@ const ManagerApprovals = () => {
         <div className='panel'>
           <div className='ph2'>
             <div className='pt2'>Expense detail</div>
-<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
-            <span className={`badge ${expenses[sel]?.status === 'pending' ? 'b-wa' : expenses[sel]?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
-              {expenses[sel]?.status === 'approved' ? 'Approved' : expenses[sel]?.status === 'rejected' ? 'Rejected' : `In Review (${expenses[sel]?.approvalStep || 1}/3)`}
-=======
             <span className={`badge ${selectedExpense?.status === 'pending' ? 'b-wa' : selectedExpense?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
               {selectedExpense?.status === 'approved' ? 'Approved' : selectedExpense?.status === 'rejected' ? 'Rejected' : 'In Review'}
->>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
             </span>
           </div>
           {selectedExpense ? (

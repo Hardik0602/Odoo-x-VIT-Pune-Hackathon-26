@@ -107,6 +107,49 @@ const ExpenseSubmit = () => {
     }
   }
 
+  const handleOCR = async (file) => {
+  if (!file) return
+
+  setOcrLoading(true)
+
+  try {
+    const {
+      data: { text }
+    } = await Tesseract.recognize(file, 'eng', {
+      logger: m => console.log(m)
+    })
+
+    console.log('OCR TEXT:', text)
+
+    // 💰 Extract amount
+    const amountMatch = text.match(/(\d+[\.,]\d{2})/)
+    if (amountMatch) {
+      setAmount(amountMatch[0].replace(',', ''))
+    }
+
+    // 📅 Extract date (DD/MM/YYYY or DD-MM-YYYY)
+    const dateMatch = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)
+    if (dateMatch) {
+      const parts = dateMatch[0].split(/[\/\-]/)
+      setDate(`${parts[2]}-${parts[1]}-${parts[0]}`)
+    }
+
+    // 📝 Extract description (first meaningful line)
+    const lines = text.split('\n').filter(l => l.trim().length > 3)
+    if (lines.length > 0) {
+      setDesc(lines[0])
+    }
+
+    toast.success('OCR completed — fields auto-filled 🎉')
+
+  } catch (err) {
+    console.error(err)
+    toast.error('OCR failed')
+  } finally {
+    setOcrLoading(false)
+  }
+}
+
   return (
     <div className='view'>
       <div className='ph'>
@@ -155,19 +198,44 @@ const ExpenseSubmit = () => {
             </div>
             <div className='pb'>
               <div
-                role='button'
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter'}
-                style={{
-                  border: '1.5px dashed var(--border2)',
-                  borderRadius: 'var(--r)',
-                  padding: 20,
-                  cursor: 'pointer',
-                  transition: 'all .2s',
-                  background: 'var(--surface2)',
-                  textAlign: 'center'
-                }}
-              >
+  role='button'
+  tabIndex={0}
+  onClick={() => document.getElementById('receiptUpload').click()}
+  onKeyDown={e => e.key === 'Enter' && document.getElementById('receiptUpload').click()}
+  style={{
+    border: '1.5px dashed var(--border2)',
+    borderRadius: 'var(--r)',
+    padding: 20,
+    cursor: 'pointer',
+    transition: 'all .2s',
+    background: 'var(--surface2)',
+    textAlign: 'center'
+  }}
+>
+  {/* Hidden input */}
+  <input
+    type="file"
+    accept="image/*"
+    style={{ display: 'none' }}
+    id="receiptUpload"
+    onChange={(e) => handleOCR(e.target.files[0])}
+  />
+
+  {ocrLoading ? (
+    <div style={{ fontSize: 13.5, fontWeight: 500 }}>
+      🔍 Scanning receipt...
+    </div>
+  ) : (
+    <>
+      <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>
+        📎 Upload or drag receipt here (optional)
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+        PNG, JPG supported
+      </div>
+    </>
+  )}
+</div>
                 <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>📎 Upload or drag receipt here (optional)</div>
                 <div style={{ fontSize: 12, color: 'var(--text3)' }}>PNG, JPG or PDF</div>
               </div>
@@ -335,7 +403,6 @@ const ExpenseSubmit = () => {
           </div>
         </div>
       </div>
-    </div>
   )
 }
 
