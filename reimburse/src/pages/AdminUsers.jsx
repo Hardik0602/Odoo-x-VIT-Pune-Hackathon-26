@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { getAllUsers, addRegisteredUser } from '../../data/userStore'
+import { getAllUsers, addRegisteredUser } from '../data/userStore'
 import { toast } from 'react-toastify'
 
 const Row = ({ initials, name, email, manager, roleDefault }) => {

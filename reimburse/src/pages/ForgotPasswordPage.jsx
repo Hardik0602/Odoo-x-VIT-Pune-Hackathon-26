@@ -52,7 +52,7 @@ const ForgotPasswordPage = () => {
         <div className='alogo'>
           Re<span>imburse</span>
         </div>
-        <div className='asub'>Reset your password</div>
+        <div className='asub'>Reset Password</div>
         <p className='text-sm text-(--text2) mb-6'>
           Enter your email address and we'll send you a temporary password.
         </p>

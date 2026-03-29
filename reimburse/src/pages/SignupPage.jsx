@@ -53,7 +53,7 @@ const SignupPage = () => {
         <div className='alogo'>
           Re<span>imburse</span>
         </div>
-        <div className='asub'>Create your company account</div>
+        <div className='asub'>Sign Up</div>
         <form className='aform' onSubmit={onSignup}>
           <div className='fg'>
             <label className='fl' htmlFor='su-name'>
@@ -70,7 +70,7 @@ const SignupPage = () => {
           </div>
           <div className='fg'>
             <label className='fl' htmlFor='su-email'>
-              Work Email
+              Email
             </label>
             <input
               id='su-email'
