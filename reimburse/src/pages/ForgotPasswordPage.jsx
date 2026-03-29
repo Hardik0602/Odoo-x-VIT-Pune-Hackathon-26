@@ -74,7 +74,7 @@ const ForgotPasswordPage = () => {
               id='reset-email'
               className='fi'
               type='email'
-              placeholder='you@company.io'
+              placeholder='you@company.com'
               value={email}
               required
               onChange={e => setEmail(e.target.value)} />

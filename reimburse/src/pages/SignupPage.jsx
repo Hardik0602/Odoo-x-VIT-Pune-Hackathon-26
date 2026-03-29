@@ -57,26 +57,26 @@ const SignupPage = () => {
         <form className='aform' onSubmit={onSignup}>
           <div className='fg'>
             <label className='fl' htmlFor='su-name'>
-              Full name
+              Full Name
             </label>
             <input
               id='su-name'
               className='fi'
               type='text'
-              placeholder='Ravi Anand'
+              placeholder='Your Name'
               value={suName}
               required
               onChange={e => setSuName(e.target.value)} />
           </div>
           <div className='fg'>
             <label className='fl' htmlFor='su-email'>
-              Work email
+              Work Email
             </label>
             <input
               id='su-email'
               className='fi'
               type='email'
-              placeholder='ravi@acme.io'
+              placeholder='you@company.com'
               value={suEmail}
               required
               onChange={e => setSuEmail(e.target.value)} />
@@ -90,7 +90,7 @@ const SignupPage = () => {
                 id='su-pass'
                 className='fi pr-10'
                 type={showSu1 ? 'text' : 'password'}
-                placeholder='••••••••'
+                placeholder='Password'
                 value={suPassword}
                 required
                 minLength={6}
@@ -113,7 +113,7 @@ const SignupPage = () => {
                 id='su-confirm'
                 className='fi pr-10'
                 type={showSu2 ? 'text' : 'password'}
-                placeholder='••••••••'
+                placeholder='Re-enter Password'
                 value={suConfirm}
                 required
                 onChange={e => setSuConfirm(e.target.value)} />
