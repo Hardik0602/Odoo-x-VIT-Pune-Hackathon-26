@@ -1,12 +1,12 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
-import NavBar from '../components/AdminNavBar'
-const MainLayout = () => {
+import AdminNavBar from '../components/AdminNavBar'
+const AdminLayout = () => {
   return (
     <>
-      <NavBar />
+      <AdminNavBar />
       <Outlet />
     </>
   )
 }
-export default MainLayout
+export default AdminLayout
