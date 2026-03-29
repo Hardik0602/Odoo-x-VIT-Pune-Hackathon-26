@@ -2,13 +2,11 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { FaCircleNotch } from 'react-icons/fa'
-
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [tempPassword, setTempPassword] = useState('')
-
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
     let password = ''
@@ -17,27 +15,21 @@ const ForgotPasswordPage = () => {
     }
     return password
   }
-
   const onSubmit = e => {
     e.preventDefault()
     if (!email.trim()) {
       toast.error('Please enter your email address')
       return
     }
-
     setLoading(true)
-    // Generate unique random password
     const newPassword = generateRandomPassword()
     setTempPassword(newPassword)
-
-    // Simulate API call
     setTimeout(() => {
       setLoading(false)
       setEmailSent(true)
       toast.success('Temporary password sent to your email')
     }, 1000)
   }
-
   if (emailSent) {
     return (
       <div className='auth-wrap'>
@@ -46,16 +38,16 @@ const ForgotPasswordPage = () => {
             Re<span>imburse</span>
           </div>
           <div className='asub'>Check your email</div>
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <p style={{ color: 'var(--text2)', marginBottom: 16 }}>
+          <div className='text-center mb-6'>
+            <p className='text-(--text2) mb-4'>
               Password reset email sent to <strong>{email}</strong>
             </p>
-            <p style={{ fontSize: 14, color: 'var(--text3)' }}>
+            <p className='text-sm text-(--text3)'>
               Check your email for a temporary password. Use it to log in and change your password immediately.
             </p>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <Link to='/login' className='btn bp' style={{ display: 'inline-block' }}>
+          <div className='text-center'>
+            <Link to='/login' className='btn bp inline-block'>
               Back to Login
             </Link>
           </div>
@@ -63,7 +55,6 @@ const ForgotPasswordPage = () => {
       </div>
     )
   }
-
   return (
     <div className='auth-wrap'>
       <div className='auth-card auth-card--centered'>
@@ -71,7 +62,7 @@ const ForgotPasswordPage = () => {
           Re<span>imburse</span>
         </div>
         <div className='asub'>Reset your password</div>
-        <p style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 24 }}>
+        <p className='text-sm text-(--text2) mb-6'>
           Enter your email address and we'll send you a temporary password.
         </p>
         <form className='aform' onSubmit={onSubmit}>
@@ -86,17 +77,14 @@ const ForgotPasswordPage = () => {
               placeholder='you@company.io'
               value={email}
               required
-              onChange={e => setEmail(e.target.value)}
-            />
+              onChange={e => setEmail(e.target.value)} />
           </div>
           <button
             type='submit'
-            className='btn bp'
-            style={{ width: '100%', justifyContent: 'center' }}
-            disabled={loading}
-          >
+            className='btn bp w-full justify-center'
+            disabled={loading}>
             {loading ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span className='inline-flex items-center gap-2'>
                 <FaCircleNotch className='animate-spin' size={14} /> Sending…
               </span>
             ) : (
@@ -104,14 +92,13 @@ const ForgotPasswordPage = () => {
             )}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <span style={{ fontSize: 14, color: 'var(--text2)' }}>
-            Remember your password? <Link to='/login' style={{ color: 'var(--accent)' }}>Sign in</Link>
+        <div className='text-center mt-5'>
+          <span className='text-sm text-(--text2)'>
+            Remember your password? <Link to='/login' className='text-(--accent)'>Sign in</Link>
           </span>
         </div>
       </div>
     </div>
   )
 }
-
 export default ForgotPasswordPage

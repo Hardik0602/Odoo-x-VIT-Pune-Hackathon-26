@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import { FaCircleNotch, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { countryCurrencyOptions, parseCountryCurrency } from '../data/countryCurrency'
-
 const SignupPage = () => {
   const { user, register } = useAuth()
   const navigate = useNavigate()
@@ -16,14 +15,12 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false)
   const [showSu1, setShowSu1] = useState(false)
   const [showSu2, setShowSu2] = useState(false)
-
   const currencyPreview = useMemo(() => {
     const { country, currencyCode, currencySymbol } = parseCountryCurrency(countryVal)
     const opt = countryCurrencyOptions.find(o => o.value === countryVal)
     const flag = opt?.flag || '🌍'
     return `${flag} Company currency set to ${currencyCode} ${currencySymbol}`
   }, [countryVal])
-
   const onSignup = e => {
     e.preventDefault()
     if (suPassword !== suConfirm) {
@@ -47,11 +44,9 @@ const SignupPage = () => {
       navigate('/employee/dashboard')
     }, 600)
   }
-
   if (user) {
     return <Navigate to='/employee/dashboard' replace />
   }
-
   return (
     <div className='auth-wrap'>
       <div className='auth-card auth-card--centered'>
@@ -71,8 +66,7 @@ const SignupPage = () => {
               placeholder='Ravi Anand'
               value={suName}
               required
-              onChange={e => setSuName(e.target.value)}
-            />
+              onChange={e => setSuName(e.target.value)} />
           </div>
           <div className='fg'>
             <label className='fl' htmlFor='su-email'>
@@ -85,32 +79,27 @@ const SignupPage = () => {
               placeholder='ravi@acme.io'
               value={suEmail}
               required
-              onChange={e => setSuEmail(e.target.value)}
-            />
+              onChange={e => setSuEmail(e.target.value)} />
           </div>
           <div className='fg'>
             <label className='fl' htmlFor='su-pass'>
               Password
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className='relative'>
               <input
                 id='su-pass'
-                className='fi'
+                className='fi pr-10'
                 type={showSu1 ? 'text' : 'password'}
                 placeholder='••••••••'
                 value={suPassword}
                 required
                 minLength={6}
-                onChange={e => setSuPassword(e.target.value)}
-                style={{ paddingRight: 40 }}
-              />
+                onChange={e => setSuPassword(e.target.value)} />
               <button
                 type='button'
-                className='nav-tab'
-                style={{ position: 'absolute', right: 0, top: 0, padding: '9px 10px', border: 'none' }}
+                className='absolute right-0 top-1/2 -translate-y-1/2 p-2.25 pr-2.5 border-none bg-transparent text-(--text2) cursor-pointer transition-colors hover:text-(--text)'
                 onClick={() => setShowSu1(!showSu1)}
-                aria-label='Toggle password'
-              >
+                aria-label='Toggle password'>
                 {showSu1 ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
@@ -119,24 +108,20 @@ const SignupPage = () => {
             <label className='fl' htmlFor='su-confirm'>
               Confirm password
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className='relative'>
               <input
                 id='su-confirm'
-                className='fi'
+                className='fi pr-10'
                 type={showSu2 ? 'text' : 'password'}
                 placeholder='••••••••'
                 value={suConfirm}
                 required
-                onChange={e => setSuConfirm(e.target.value)}
-                style={{ paddingRight: 40 }}
-              />
+                onChange={e => setSuConfirm(e.target.value)} />
               <button
                 type='button'
-                className='nav-tab'
-                style={{ position: 'absolute', right: 0, top: 0, padding: '9px 10px', border: 'none' }}
+                className='absolute right-0 top-1/2 -translate-y-1/2 p-2.25 pr-2.5 border-none bg-transparent text-(--text2) cursor-pointer transition-colors hover:text-(--text)'
                 onClick={() => setShowSu2(!showSu2)}
-                aria-label='Toggle password'
-              >
+                aria-label='Toggle password'>
                 {showSu2 ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
@@ -149,8 +134,7 @@ const SignupPage = () => {
               id='su-country'
               className='fi'
               value={countryVal}
-              onChange={e => setCountryVal(e.target.value)}
-            >
+              onChange={e => setCountryVal(e.target.value)}>
               {countryCurrencyOptions.map(o => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -162,12 +146,10 @@ const SignupPage = () => {
           </div>
           <button
             type='submit'
-            className='btn bp'
-            style={{ width: '100%', justifyContent: 'center' }}
-            disabled={loading}
-          >
+            className='btn bp w-full justify-center'
+            disabled={loading}>
             {loading ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span className='inline-flex items-center gap-2'>
                 <FaCircleNotch className='animate-spin' size={14} /> Creating…
               </span>
             ) : (
@@ -175,14 +157,13 @@ const SignupPage = () => {
             )}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <span style={{ fontSize: 14, color: 'var(--text2)' }}>
-            Already have an account? <Link to='/login' style={{ color: 'var(--accent)' }}>Sign in</Link>
+        <div className='text-center mt-5'>
+          <span className='text-sm text-(--text2)'>
+            Already have an account? <Link to='/login' className='text-(--accent)'>Sign in</Link>
           </span>
         </div>
       </div>
     </div>
   )
 }
-
 export default SignupPage

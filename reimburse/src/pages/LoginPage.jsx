@@ -3,7 +3,6 @@ import { useNavigate, Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import { FaCircleNotch, FaEye, FaEyeSlash } from 'react-icons/fa'
-
 const LoginPage = () => {
   const { user, login } = useAuth()
   const navigate = useNavigate()
@@ -11,7 +10,6 @@ const LoginPage = () => {
   const [loginPassword, setLoginPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showLp, setShowLp] = useState(false)
-
   const onLogin = e => {
     e.preventDefault()
     setLoading(true)
@@ -26,11 +24,9 @@ const LoginPage = () => {
       navigate('/employee/dashboard')
     }, 500)
   }
-
   if (user) {
     return <Navigate to='/employee/dashboard' replace />
   }
-
   return (
     <div className='auth-wrap'>
       <div className='auth-card auth-card--centered'>
@@ -50,62 +46,46 @@ const LoginPage = () => {
               placeholder='you@company.io'
               value={loginEmail}
               required
-              onChange={e => setLoginEmail(e.target.value)}
-            />
+              onChange={e => setLoginEmail(e.target.value)} />
           </div>
           <div className='fg'>
             <label className='fl' htmlFor='li-pass'>
               Password
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className='relative'>
               <input
                 id='li-pass'
-                className='fi'
+                className='fi pr-10'
                 type={showLp ? 'text' : 'password'}
                 placeholder='••••••••'
                 value={loginPassword}
                 required
-                onChange={e => setLoginPassword(e.target.value)}
-                style={{ paddingRight: 40 }}
-              />
+                onChange={e => setLoginPassword(e.target.value)} />
               <button
                 type='button'
-                className='nav-tab'
-                style={{ position: 'absolute', right: 0, top: 0, padding: '9px 10px', border: 'none' }}
+                className='absolute right-0 top-1/2 -translate-y-1/2 p-2.25 pr-2.5 border-none bg-transparent text-(--text2) cursor-pointer transition-colors hover:text-(--text)'
                 onClick={() => setShowLp(!showLp)}
-                aria-label='Toggle password'
-              >
+                aria-label='Toggle password'>
                 {showLp ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 12,
-                color: 'var(--text2)',
-                cursor: 'pointer'
-              }}
-            >
+          <div className='flex justify-between items-center'>
+            <label className='flex items-center gap-1.25 text-xs text-(--text2) cursor-pointer'>
               <input type='checkbox' style={{ accentColor: 'var(--accent)' }} /> Remember me
             </label>
-            <span style={{ fontSize: 12, color: 'var(--text3)', cursor: 'pointer' }}>
-              <Link to='/forgot-password' style={{ color: 'inherit', textDecoration: 'none' }}>
+            <span className='text-xs text-(--text3) cursor-pointer'>
+              <Link to='/forgot-password' className='text-inherit no-underline'>
                 Forgot password?
               </Link>
             </span>
           </div>
           <button
             type='submit'
-            className='btn bp'
-            style={{ width: '100%', justifyContent: 'center' }}
-            disabled={loading}
-          >
+            className='btn bp w-full justify-center'
+            disabled={loading}>
             {loading ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span className='inline-flex items-center gap-2'>
                 <FaCircleNotch className='animate-spin' size={14} /> Signing in…
               </span>
             ) : (
@@ -113,14 +93,13 @@ const LoginPage = () => {
             )}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <span style={{ fontSize: 14, color: 'var(--text2)' }}>
-            Don't have an account? <Link to='/signup' style={{ color: 'var(--accent)' }}>Sign up</Link>
+        <div className='text-center mt-5'>
+          <span className='text-sm text-(--text2)'>
+            Don't have an account? <Link to='/signup' className='text-(--accent)'>Sign up</Link>
           </span>
         </div>
       </div>
     </div>
   )
 }
-
 export default LoginPage

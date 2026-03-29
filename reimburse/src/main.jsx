@@ -12,7 +12,8 @@ createRoot(document.getElementById('root')).render(
         autoClose={3000}
         closeOnClick
         pauseOnHover={false}
-        newestOnTop />
+        newestOnTop
+        theme='dark' />
       <div className='reimburse-app'>
         <App />
       </div>
