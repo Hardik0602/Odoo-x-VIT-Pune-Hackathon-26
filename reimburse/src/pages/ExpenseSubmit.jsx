@@ -5,10 +5,26 @@ import { toast } from 'react-toastify'
 
 const RATES = {
   'INR|₹|1': 1,
-  'USD|$|83.41': 83.41,
-  'EUR|€|90.2': 90.2,
-  'GBP|£|105.5': 105.5,
-  'SGD|S$|61.8': 61.8
+  'USD|$|91.5': 91.5,
+  'EUR|€|90.5': 90.5,
+  'GBP|£|105.8': 105.8,
+  'JPY|¥|0.55': 0.55,
+  'CNY|¥|11.5': 11.5,
+  'KRW|₩|0.062': 0.062,
+  'SGD|S$|61.5': 61.5,
+  'AUD|A$|54.8': 54.8,
+  'CAD|C$|61.2': 61.2,
+  'NZD|NZ$|50.5': 50.5,
+  'AED|د.إ|22.65': 22.65,
+  'SAR|﷼|22.2': 22.2,
+  'QAR|﷼|22.8': 22.8,
+  'CHF|CHF|94.5': 94.5,
+  'SEK|kr|8.0': 8.0,
+  'NOK|kr|7.9': 7.9,
+  'DKK|kr|12.1': 12.1,
+  'BRL|R$|16.8': 16.8,
+  'MXN|$|4.9': 4.9,
+  'ZAR|R|4.4': 4.4
 }
 
 const ExpenseSubmit = () => {
@@ -65,7 +81,6 @@ const ExpenseSubmit = () => {
         submittedDate: new Date().toISOString().split('T')[0],
         date: date,
         status: 'pending',
-        approvalStep: 1,
         notes: notes
       }
 
