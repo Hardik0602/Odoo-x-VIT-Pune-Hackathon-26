@@ -43,7 +43,7 @@ const LoginPage = () => {
               id='li-email'
               className='fi'
               type='email'
-              placeholder='you@company.io'
+              placeholder='you@company.com'
               value={loginEmail}
               required
               onChange={e => setLoginEmail(e.target.value)} />
@@ -57,7 +57,7 @@ const LoginPage = () => {
                 id='li-pass'
                 className='fi pr-10'
                 type={showLp ? 'text' : 'password'}
-                placeholder='••••••••'
+                placeholder='Your Password'
                 value={loginPassword}
                 required
                 onChange={e => setLoginPassword(e.target.value)} />
@@ -75,7 +75,7 @@ const LoginPage = () => {
               <input type='checkbox' style={{ accentColor: 'var(--accent)' }} /> Remember me
             </label>
             <span className='text-xs text-(--text3) cursor-pointer'>
-              <Link to='/forgot-password' className='text-inherit no-underline'>
+              <Link to='/forgot-password' className='text-(--text2) text-xs no-underline'>
                 Forgot password?
               </Link>
             </span>
