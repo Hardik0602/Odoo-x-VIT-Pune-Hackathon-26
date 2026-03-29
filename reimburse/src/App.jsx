@@ -5,13 +5,12 @@ import ReimburseLayout from './layouts/ReimburseLayout'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import EmployeeDashboard from './pages/reimburse/EmployeeDashboard'
-import ExpenseSubmit from './pages/reimburse/ExpenseSubmit'
-import MyClaims from './pages/reimburse/MyClaims'
-import ManagerApprovals from './pages/reimburse/ManagerApprovals'
-import AdminUsers from './pages/reimburse/AdminUsers'
-import AdminRules from './pages/reimburse/AdminRules'
-
+import EmployeeDashboard from './pages/EmployeeDashboard'
+import ExpenseSubmit from './pages/ExpenseSubmit'
+import MyClaims from './pages/MyClaims'
+import ManagerApprovals from './pages/ManagerApprovals'
+import AdminUsers from './pages/AdminUsers'
+import AdminRules from './pages/AdminRules'
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -27,7 +26,7 @@ const router = createBrowserRouter(
         }
       >
         <Route index element={<Navigate to='/employee/dashboard' replace />} />
-        
+
         {/* Employee Routes */}
         <Route
           path='employee/dashboard'
@@ -53,7 +52,7 @@ const router = createBrowserRouter(
             </RoleProtectedRoute>
           }
         />
-        
+
         {/* Manager Routes */}
         <Route
           path='manager/approvals'
@@ -71,7 +70,7 @@ const router = createBrowserRouter(
             </RoleProtectedRoute>
           }
         />
-        
+
         {/* Admin Routes */}
         <Route
           path='admin/users'
@@ -102,6 +101,6 @@ const router = createBrowserRouter(
   )
 )
 
-export default function App () {
+export default function App() {
   return <RouterProvider router={router} />
 }

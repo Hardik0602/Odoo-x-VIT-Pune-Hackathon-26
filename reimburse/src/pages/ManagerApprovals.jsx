@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { useAuth } from '../../context/AuthContext'
-import { getAllUsers } from '../../data/userStore'
+import { useAuth } from '../context/AuthContext'
+import { getAllUsers } from '../data/userStore'
 
 const ManagerApprovals = () => {
   const { user } = useAuth()
   const sym = user?.currencySymbol || '₹'
   const code = user?.currencyCode || 'INR'
-  const [sel, setSel] = useState(0)
+  const [selectedId, setSelectedId] = useState(null)
   const [comment, setComment] = useState('')
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
+
+  const selectedExpense = expenses.find(exp => exp.id === selectedId) || expenses[0]
 
   useEffect(() => {
     const fetchExpenses = async () => {
@@ -46,7 +48,15 @@ const ManagerApprovals = () => {
             )
           }
 
-          setExpenses(filteredExpenses)
+          const sortedExpenses = filteredExpenses
+            .filter(exp => exp.status === 'pending')
+            .sort((a, b) => {
+              const dateA = new Date(a.submittedDate + 'T00:00:00')
+              const dateB = new Date(b.submittedDate + 'T00:00:00')
+              if (dateB - dateA !== 0) return dateB - dateA
+              return parseInt(b.id.split('-')[1]) - parseInt(a.id.split('-')[1])
+            })
+          setExpenses(sortedExpenses)
         }
       } catch (error) {
         console.error('Error fetching expenses:', error)
@@ -61,7 +71,7 @@ const ManagerApprovals = () => {
 
   useEffect(() => {
     if (expenses.length > 0) {
-      setSel(0)
+      setSelectedId(expenses[0].id)
     }
   }, [expenses])
 
@@ -104,6 +114,19 @@ const ManagerApprovals = () => {
 
     const updatedApprovals = [...existingApprovals, newApproval]
 
+<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
+=======
+    const isCfoOverride = user?.role?.toLowerCase() === 'cfo'
+    const approvedCount = updatedApprovals.filter(a => a.decision === 'approved').length
+    const threshold = 3
+    const metPercentageRule = (approvedCount / threshold) >= 0.6
+
+    let newStatus = 'pending'
+    if (existingApprovals.length === 0 || isCfoOverride || metPercentageRule) {
+      newStatus = 'approved'
+    }
+
+>>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
         method: 'PATCH',
@@ -113,9 +136,22 @@ const ManagerApprovals = () => {
 
       if (res.ok) {
         toast.success(`Approved!${comment ? ` Comment: ${comment}` : ''}`)
+<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
         setExpenses(prev => prev.map(exp =>
           exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals, approvalStep: newStep } : exp
         ))
+=======
+        setExpenses(prev => {
+          const newList = prev.filter(exp => exp.id !== expenseId)
+          if (newList.length > 0) {
+            setSelectedId(newList[0].id)
+          } else {
+            setSelectedId(null)
+          }
+          return newList
+        })
+        setComment('')
+>>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
       } else {
         toast.error('Failed to approve expense')
       }
@@ -139,9 +175,6 @@ const ManagerApprovals = () => {
       return
     }
 
-    const normalizedName = user?.name?.toLowerCase()
-    const isDirectorReject = user?.role?.toLowerCase() === 'director' || normalizedName === 'director'
-
     const newApproval = {
       by: user?.email,
       role: user?.role,
@@ -151,7 +184,7 @@ const ManagerApprovals = () => {
     }
 
     const updatedApprovals = [...existingApprovals, newApproval]
-    const newStatus = isDirectorReject ? 'rejected' : 'rejected'
+    const newStatus = 'rejected'
 
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
@@ -162,9 +195,16 @@ const ManagerApprovals = () => {
 
       if (res.ok) {
         toast.error(`Rejected.${comment ? ` Comment: ${comment}` : ''}`)
-        setExpenses(prev => prev.map(exp =>
-          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals } : exp
-        ))
+        setExpenses(prev => {
+          const newList = prev.filter(exp => exp.id !== expenseId)
+          if (newList.length > 0) {
+            setSelectedId(newList[0].id)
+          } else {
+            setSelectedId(null)
+          }
+          return newList
+        })
+        setComment('')
       } else {
         toast.error('Failed to reject expense')
       }
@@ -180,7 +220,7 @@ const ManagerApprovals = () => {
         <div>
           <div className='pt'>Approvals to review</div>
           <div className='ps'>
-            {expenses.length} expenses waiting · amounts shown in company currency {code} {sym}
+            {expenses.filter(e => e.status === 'pending').length} expenses waiting · amounts shown in company currency {code} {sym}
           </div>
         </div>
       </div>
@@ -273,8 +313,8 @@ const ManagerApprovals = () => {
                     <tr
                       key={expense.id}
                       id={`mr${index}`}
-                      style={{ background: sel === index ? 'var(--adim)' : undefined }}
-                      onClick={() => setSel(index)}
+                      style={{ background: selectedId === expense.id ? 'var(--adim)' : undefined }}
+                      onClick={() => setSelectedId(expense.id)}
                     >
                       <td>
                         <div style={{ fontWeight: 500 }}>{expense.description}</div>
@@ -319,30 +359,36 @@ const ManagerApprovals = () => {
                         )}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button
-                            type='button'
-                            className='btn bs'
-                            style={{ padding: '4px 8px', fontSize: 11 }}
-                            onClick={e => {
-                              e.stopPropagation()
-                              approve(expense.id)
-                            }}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            type='button'
-                            className='btn bd'
-                            style={{ padding: '4px 8px', fontSize: 11 }}
-                            onClick={e => {
-                              e.stopPropagation()
-                              reject(expense.id)
-                            }}
-                          >
-                            ✗
-                          </button>
-                        </div>
+                        {expense.status === 'pending' && !expense.approvals?.some(a => a.by === user?.email) ? (
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button
+                              type='button'
+                              className='btn bs'
+                              style={{ padding: '4px 8px', fontSize: 11 }}
+                              onClick={e => {
+                                e.stopPropagation()
+                                approve(expense.id)
+                              }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              type='button'
+                              className='btn bd'
+                              style={{ padding: '4px 8px', fontSize: 11 }}
+                              onClick={e => {
+                                e.stopPropagation()
+                                reject(expense.id)
+                              }}
+                            >
+                              ✗
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+                            {expense.approvals?.some(a => a.by === user?.email) ? 'Reviewed' : expense.status}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   )
@@ -355,20 +401,25 @@ const ManagerApprovals = () => {
         <div className='panel'>
           <div className='ph2'>
             <div className='pt2'>Expense detail</div>
+<<<<<<< HEAD:reimburse/src/pages/reimburse/ManagerApprovals.jsx
             <span className={`badge ${expenses[sel]?.status === 'pending' ? 'b-wa' : expenses[sel]?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
               {expenses[sel]?.status === 'approved' ? 'Approved' : expenses[sel]?.status === 'rejected' ? 'Rejected' : `In Review (${expenses[sel]?.approvalStep || 1}/3)`}
+=======
+            <span className={`badge ${selectedExpense?.status === 'pending' ? 'b-wa' : selectedExpense?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
+              {selectedExpense?.status === 'approved' ? 'Approved' : selectedExpense?.status === 'rejected' ? 'Rejected' : 'In Review'}
+>>>>>>> d652b99218e01d8aca30fab755672cb0e71710e9:reimburse/src/pages/ManagerApprovals.jsx
             </span>
           </div>
-          {expenses[sel] ? (
+          {selectedExpense ? (
             <div className='pb'>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 13 }}>
                 <div>
                   <div style={{ fontFamily: 'var(--font-d)', fontSize: 22 }}>
-                    {sym}{parseFloat(expenses[sel].amount).toLocaleString()}
+                    {sym}{parseFloat(selectedExpense.amount).toLocaleString()}
                   </div>
-                  {expenses[sel].originalCurrency !== 'INR' && (
+                  {selectedExpense.originalCurrency !== 'INR' && (
                     <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>
-                      {expenses[sel].originalAmount} {expenses[sel].originalCurrency} orig.
+                      {selectedExpense.originalAmount} {selectedExpense.originalCurrency} orig.
                     </div>
                   )}
                 </div>
@@ -381,13 +432,13 @@ const ManagerApprovals = () => {
                     border: '1px solid var(--border)'
                   }}
                 >
-                  {expenses[sel].category === 'Meals' ? '🍽 Meals' :
-                   expenses[sel].category === 'Travel' ? '✈ Travel' :
-                   expenses[sel].category === 'Supplies' ? '📦 Supplies' :
-                   expenses[sel].category === 'Accommodation' ? '🏨 Accommodation' :
-                   expenses[sel].category === 'Software' ? '☁ Software' :
-                   expenses[sel].category === 'Hardware' ? '🖥 Hardware' :
-                   expenses[sel].category === 'Events' ? '🎉 Events' : '📄 Other'}
+                  {selectedExpense.category === 'Meals' ? '🍽 Meals' :
+                   selectedExpense.category === 'Travel' ? '✈ Travel' :
+                   selectedExpense.category === 'Supplies' ? '📦 Supplies' :
+                   selectedExpense.category === 'Accommodation' ? '🏨 Accommodation' :
+                   selectedExpense.category === 'Software' ? '☁ Software' :
+                   selectedExpense.category === 'Hardware' ? '🖥 Hardware' :
+                   selectedExpense.category === 'Events' ? '🎉 Events' : '📄 Other'}
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 13 }}>
@@ -395,28 +446,28 @@ const ManagerApprovals = () => {
                   <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>SUBMITTED BY</div>
                   <div>{(() => {
                     const allUsers = getAllUsers()
-                    const submitter = allUsers.find(u => u.email === expenses[sel].submittedBy)
-                    return submitter ? submitter.name : expenses[sel].submittedBy
+                    const submitter = allUsers.find(u => u.email === selectedExpense.submittedBy)
+                    return submitter ? submitter.name : selectedExpense.submittedBy
                   })()}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DATE</div>
-                  <div style={{ fontFamily: 'var(--font-m)' }}>{new Date(expenses[sel].date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                  <div style={{ fontFamily: 'var(--font-m)' }}>{new Date(selectedExpense.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DESCRIPTION</div>
-                  <div>{expenses[sel].description}</div>
+                  <div>{selectedExpense.description}</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>NOTES</div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)' }}>{expenses[sel].notes || 'No notes'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)' }}>{selectedExpense.notes || 'No notes'}</div>
                 </div>
               </div>
               <div className='div' />
               <div className='sl'>Approval trail</div>
               <div className='tl'>
-                {expenses[sel].approvals && expenses[sel].approvals.length > 0 ? (
-                  expenses[sel].approvals.map((approval, idx) => (
+                {selectedExpense.approvals && selectedExpense.approvals.length > 0 ? (
+                  selectedExpense.approvals.map((approval, idx) => (
                     <div className='tli' key={idx}>
                       <div className={`tldot ${approval.decision === 'approved' ? 'done' : 'rjt'}`}>
                         {approval.decision === 'approved' ? '✓' : '✗'}
@@ -451,10 +502,10 @@ const ManagerApprovals = () => {
                 onChange={e => setComment(e.target.value)}
               />
               <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
-                <button type='button' className='btn bd' style={{ flex: 1, justifyContent: 'center' }} onClick={() => reject(expenses[sel].id)}>
+                <button type='button' className='btn bd' style={{ flex: 1, justifyContent: 'center' }} onClick={() => reject(selectedExpense.id)}>
                   ✗ Reject
                 </button>
-                <button type='button' className='btn bs' style={{ flex: 1, justifyContent: 'center' }} onClick={() => approve(expenses[sel].id)}>
+                <button type='button' className='btn bs' style={{ flex: 1, justifyContent: 'center' }} onClick={() => approve(selectedExpense.id)}>
                   ✓ Approve
                 </button>
               </div>
