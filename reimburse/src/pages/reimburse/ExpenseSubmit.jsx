@@ -65,6 +65,7 @@ const ExpenseSubmit = () => {
         submittedDate: new Date().toISOString().split('T')[0],
         date: date,
         status: 'pending',
+        approvalStep: 1,
         notes: notes
       }
 

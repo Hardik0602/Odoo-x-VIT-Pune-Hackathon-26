@@ -79,6 +79,21 @@ const ManagerApprovals = () => {
       return
     }
 
+    const userRole = user?.role?.toLowerCase()
+    const currentStep = expense.approvalStep || 1
+    let newStep = currentStep
+    let newStatus = 'pending'
+
+    if (userRole === 'manager' && currentStep === 1) {
+      newStep = 2
+    } else if (userRole === 'cfo' && currentStep === 2) {
+      newStep = 3
+      newStatus = 'approved'
+    } else {
+      toast.error('You are not authorized to approve at this step')
+      return
+    }
+
     const newApproval = {
       by: user?.email,
       role: user?.role,
@@ -89,30 +104,17 @@ const ManagerApprovals = () => {
 
     const updatedApprovals = [...existingApprovals, newApproval]
 
-    const normalizedName = user?.name?.toLowerCase()
-    const isCfoOverride = user?.role?.toLowerCase() === 'cfo' || normalizedName === 'cfo'
-    const approvedCount = updatedApprovals.filter(a => a.decision === 'approved').length
-    const threshold = 3 // fixed chain size for rule implementation
-    const metPercentageRule = (approvedCount / threshold) >= 0.6
-
-    let newStatus = 'pending'
-    if (isCfoOverride) {
-      newStatus = 'approved'
-    } else if (metPercentageRule) {
-      newStatus = 'approved'
-    }
-
     try {
       const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, approvals: updatedApprovals })
+        body: JSON.stringify({ status: newStatus, approvals: updatedApprovals, approvalStep: newStep })
       })
 
       if (res.ok) {
         toast.success(`Approved!${comment ? ` Comment: ${comment}` : ''}`)
         setExpenses(prev => prev.map(exp =>
-          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals } : exp
+          exp.id === expenseId ? { ...exp, status: newStatus, approvals: updatedApprovals, approvalStep: newStep } : exp
         ))
       } else {
         toast.error('Failed to approve expense')
@@ -307,7 +309,7 @@ const ManagerApprovals = () => {
                       </td>
                       <td>
                         <span className={'badge ' + (expense.status === 'pending' ? 'b-wa' : 'b-rv')}>
-                          {expense.status === 'pending' ? 'Pending' : expense.status}
+                          {expense.status === 'approved' ? 'Approved' : expense.approvalStep === 2 ? 'In Review (2/3)' : 'Pending (1/3)'}
                         </span>
                       </td>
                       <td>
@@ -354,7 +356,7 @@ const ManagerApprovals = () => {
           <div className='ph2'>
             <div className='pt2'>Expense detail</div>
             <span className={`badge ${expenses[sel]?.status === 'pending' ? 'b-wa' : expenses[sel]?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
-              {expenses[sel]?.status === 'approved' ? 'Approved' : expenses[sel]?.status === 'rejected' ? 'Rejected' : 'In Review'}
+              {expenses[sel]?.status === 'approved' ? 'Approved' : expenses[sel]?.status === 'rejected' ? 'Rejected' : `In Review (${expenses[sel]?.approvalStep || 1}/3)`}
             </span>
           </div>
           {expenses[sel] ? (

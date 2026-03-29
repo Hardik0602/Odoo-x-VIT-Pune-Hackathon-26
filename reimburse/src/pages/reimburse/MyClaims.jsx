@@ -112,7 +112,7 @@ const MyClaims = () => {
                   </td>
                   <td>
                     <span className={`badge ${getStatusBadgeClass(expense.status)}`}>
-                      {expense.status.charAt(0).toUpperCase() + expense.status.slice(1).replace('_', ' ')}
+                      {expense.status === 'approved' ? 'Approved' : `Pending (${expense.approvalStep || 1}/3)`}
                     </span>
                   </td>
                 </tr>
