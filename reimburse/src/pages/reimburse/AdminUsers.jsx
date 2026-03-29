@@ -5,6 +5,9 @@ import { toast } from 'react-toastify'
 const Row = ({ initials, name, email, manager, roleDefault }) => {
   const [role, setRole] = useState(roleDefault)
   const isSpecialRole = role === 'CFO' || role === 'Director'
+  const handleSendPassword = () => {
+    toast.success(`Password reset link sent to ${email}. Temporarily use abcd@123 and change it later.`)
+  }
   return (
     <div
       style={{
@@ -43,7 +46,7 @@ const Row = ({ initials, name, email, manager, roleDefault }) => {
       <div style={{ fontSize: 12, color: manager === '—' ? 'var(--text3)' : 'var(--text2)' }}>{manager}</div>
       <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>{email.split('@')[0]}@…</div>
       <div>
-        <button type='button' className='btn bg' style={{ padding: '4px 9px', fontSize: 11 }}>
+        <button type='button' className='btn bg' style={{ padding: '4px 9px', fontSize: 11 }} onClick={handleSendPassword}>
           Send pwd
         </button>
       </div>
@@ -119,7 +122,7 @@ const AdminUsers = () => {
     }
 
     addRegisteredUser(newUser)
-    toast.success(`User ${formData.name} invited successfully`)
+    toast.success(`Invite sent to ${formData.email}. Password reset link sent to mail; temporarily use abcd@123 and change it later.`)
     setFormData({ name: '', email: '', password: 'abcd@123', role: 'Employee', manager: defaultManager })
     setShowInviteModal(false)
   }

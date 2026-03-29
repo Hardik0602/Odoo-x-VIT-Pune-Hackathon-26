@@ -6,15 +6,7 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
-  const [tempPassword, setTempPassword] = useState('')
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
-    let password = ''
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return password
-  }
+  const [tempPassword, setTempPassword] = useState('abcd@123')
   const onSubmit = e => {
     e.preventDefault()
     if (!email.trim()) {
@@ -22,12 +14,11 @@ const ForgotPasswordPage = () => {
       return
     }
     setLoading(true)
-    const newPassword = generateRandomPassword()
-    setTempPassword(newPassword)
+    setTempPassword('abcd@123')
     setTimeout(() => {
       setLoading(false)
       setEmailSent(true)
-      toast.success('Temporary password sent to your email')
+      toast.success('Password reset link sent to mail. Temporarily use abcd@123 and change it later.')
     }, 1000)
   }
   if (emailSent) {
@@ -43,7 +34,7 @@ const ForgotPasswordPage = () => {
               Password reset email sent to <strong>{email}</strong>
             </p>
             <p className='text-sm text-(--text3)'>
-              Check your email for a temporary password. Use it to log in and change your password immediately.
+              Password reset link sent to mail. Temporarily you can use the following password: <strong>abcd@123</strong>. Make sure to change it later.
             </p>
           </div>
           <div className='text-center'>
