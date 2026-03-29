@@ -331,7 +331,7 @@ const AdminUsers = () => {
                   >
                     <option value=''>Select a manager</option>
                     {managers.map((m) => (
-                      <option key={m.email} value={m.name}>{m.name}</option>
+                      <option key={m.email} value={m.email}>{m.name}</option>
                     ))}
                   </select>
                 </div>

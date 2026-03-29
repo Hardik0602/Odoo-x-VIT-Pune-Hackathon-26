@@ -53,6 +53,12 @@ const ManagerApprovals = () => {
     fetchExpenses()
   }, [user?.email, user?.role])
 
+  useEffect(() => {
+    if (expenses.length > 0) {
+      setSel(0)
+    }
+  }, [expenses])
+
   const approve = async (expenseId) => {
     const expense = expenses.find(exp => exp.id === expenseId)
     if (!expense) return
@@ -337,96 +343,116 @@ const ManagerApprovals = () => {
         <div className='panel'>
           <div className='ph2'>
             <div className='pt2'>Expense detail</div>
-            <span className='badge b-rv'>In Review</span>
+            <span className={`badge ${expenses[sel]?.status === 'pending' ? 'b-wa' : expenses[sel]?.status === 'approved' ? 'b-ap' : 'b-rj'}`}>
+              {expenses[sel]?.status === 'approved' ? 'Approved' : expenses[sel]?.status === 'rejected' ? 'Rejected' : 'In Review'}
+            </span>
           </div>
-          <div className='pb'>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 13 }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-d)', fontSize: 22 }}>
-                  {sym}6,840
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>$82.00 USD · rate 83.41</div>
-              </div>
-              <span
-                style={{
-                  fontSize: 12,
-                  background: 'var(--surface2)',
-                  padding: '3px 9px',
-                  borderRadius: 6,
-                  border: '1px solid var(--border)'
-                }}
-              >
-                🍽 Meals
-              </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 13 }}>
-              <div>
-                <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>SUBMITTED BY</div>
-                <div>Priya Menon</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DATE</div>
-                <div style={{ fontFamily: 'var(--font-m)' }}>28 Jun 2025</div>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DESCRIPTION</div>
-                <div>Business lunch — Q2 review meeting</div>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>NOTES</div>
-                <div style={{ fontSize: 12, color: 'var(--text2)' }}>3 attendees — Priya, Arjun, client.</div>
-              </div>
-            </div>
-            <div className='div' />
-            <div className='sl'>Approval trail</div>
-            <div className='tl'>
-              <div className='tli'>
-                <div className='tldot done'>✓</div>
-                <div className='tlline' />
-                <div className='tlc'>
-                  <div className='tlt'>Step 1 — Manager</div>
-                  <div className='tls'>Vikram Singh · 28 Jun 4:12 PM</div>
-                  <div className='tlcmt'>&quot;Valid business purpose.&quot;</div>
-                </div>
-              </div>
-              <div className='tli'>
-                <div className='tldot act'>2</div>
-                <div className='tlline' />
-                <div className='tlc'>
-                  <div className='tlt'>Step 2 — Finance (you)</div>
-                  <div className='tls'>Awaiting your decision</div>
-                </div>
-              </div>
-              <div className='tli'>
-                <div className='tldot idle'>3</div>
-                <div className='tlc'>
-                  <div className='tlt'>Step 3 — Director</div>
-                  <div className='tls' style={{ color: 'var(--text3)' }}>
-                    Pending step 2
+          {expenses[sel] ? (
+            <div className='pb'>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 13 }}>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-d)', fontSize: 22 }}>
+                    {sym}{parseFloat(expenses[sel].amount).toLocaleString()}
                   </div>
+                  {expenses[sel].originalCurrency !== 'INR' && (
+                    <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>
+                      {expenses[sel].originalAmount} {expenses[sel].originalCurrency} orig.
+                    </div>
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: 12,
+                    background: 'var(--surface2)',
+                    padding: '3px 9px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border)'
+                  }}
+                >
+                  {expenses[sel].category === 'Meals' ? '🍽 Meals' :
+                   expenses[sel].category === 'Travel' ? '✈ Travel' :
+                   expenses[sel].category === 'Supplies' ? '📦 Supplies' :
+                   expenses[sel].category === 'Accommodation' ? '🏨 Accommodation' :
+                   expenses[sel].category === 'Software' ? '☁ Software' :
+                   expenses[sel].category === 'Hardware' ? '🖥 Hardware' :
+                   expenses[sel].category === 'Events' ? '🎉 Events' : '📄 Other'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 13 }}>
+                <div>
+                  <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>SUBMITTED BY</div>
+                  <div>{(() => {
+                    const allUsers = getAllUsers()
+                    const submitter = allUsers.find(u => u.email === expenses[sel].submittedBy)
+                    return submitter ? submitter.name : expenses[sel].submittedBy
+                  })()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DATE</div>
+                  <div style={{ fontFamily: 'var(--font-m)' }}>{new Date(expenses[sel].date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>DESCRIPTION</div>
+                  <div>{expenses[sel].description}</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 2 }}>NOTES</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)' }}>{expenses[sel].notes || 'No notes'}</div>
                 </div>
               </div>
+              <div className='div' />
+              <div className='sl'>Approval trail</div>
+              <div className='tl'>
+                {expenses[sel].approvals && expenses[sel].approvals.length > 0 ? (
+                  expenses[sel].approvals.map((approval, idx) => (
+                    <div className='tli' key={idx}>
+                      <div className={`tldot ${approval.decision === 'approved' ? 'done' : 'rjt'}`}>
+                        {approval.decision === 'approved' ? '✓' : '✗'}
+                      </div>
+                      <div className='tlline' />
+                      <div className='tlc'>
+                        <div className='tlt'>{approval.role?.charAt(0).toUpperCase() + approval.role?.slice(1)}</div>
+                        <div className='tls'>{approval.by} · {new Date(approval.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        {approval.comment && <div className='tlcmt'>"{approval.comment}"</div>}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className='tli'>
+                    <div className='tldot act'>1</div>
+                    <div className='tlc'>
+                      <div className='tlt'>Awaiting first approval</div>
+                      <div className='tls'>No approvals yet</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className='div' />
+              <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 6 }}>COMMENT (OPTIONAL)</div>
+              <textarea
+                className='fi'
+                rows={2}
+                id='mcmt'
+                placeholder='Add a comment…'
+                style={{ resize: 'none' }}
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+              />
+              <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
+                <button type='button' className='btn bd' style={{ flex: 1, justifyContent: 'center' }} onClick={() => reject(expenses[sel].id)}>
+                  ✗ Reject
+                </button>
+                <button type='button' className='btn bs' style={{ flex: 1, justifyContent: 'center' }} onClick={() => approve(expenses[sel].id)}>
+                  ✓ Approve
+                </button>
+              </div>
             </div>
-            <div className='div' />
-            <div style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', marginBottom: 6 }}>COMMENT (OPTIONAL)</div>
-            <textarea
-              className='fi'
-              rows={2}
-              id='mcmt'
-              placeholder='Add a comment…'
-              style={{ resize: 'none' }}
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-            />
-            <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
-              <button type='button' className='btn bd' style={{ flex: 1, justifyContent: 'center' }} onClick={() => reject(0)}>
-                ✗ Reject
-              </button>
-              <button type='button' className='btn bs' style={{ flex: 1, justifyContent: 'center' }} onClick={() => approve(0)}>
-                ✓ Approve
-              </button>
+          ) : (
+            <div className='pb' style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text3)' }}>
+              <div style={{ fontSize: 14 }}>No expense selected</div>
+              <div style={{ fontSize: 12, marginTop: 6 }}>Select an expense from the list</div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
