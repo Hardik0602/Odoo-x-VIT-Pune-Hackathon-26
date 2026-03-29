@@ -19,19 +19,28 @@ const ManagerApprovals = () => {
         if (res.ok) {
           const allExpenses = await res.json()
           const allUsers = getAllUsers()
+          const userRole = user?.role?.toLowerCase()
 
-          // Find employees who report to this manager
-          const myEmployees = allUsers.filter(u =>
-            u.role?.toLowerCase() === 'employee' &&
-            u.manager === user?.email
-          )
+          let filteredExpenses = allExpenses
 
-          // Filter expenses submitted by my employees
-          const myTeamExpenses = allExpenses.filter(exp =>
-            myEmployees.some(emp => emp.email === exp.submittedBy)
-          )
+          // For CFO and Director, show all expenses from all employees
+          if (userRole === 'cfo' || userRole === 'director') {
+            const allEmployees = allUsers.filter(u => u.role?.toLowerCase() === 'employee')
+            filteredExpenses = allExpenses.filter(exp =>
+              allEmployees.some(emp => emp.email === exp.submittedBy)
+            )
+          } else {
+            // For regular managers, show only expenses from their direct reports
+            const myEmployees = allUsers.filter(u =>
+              u.role?.toLowerCase() === 'employee' &&
+              u.manager === user?.email
+            )
+            filteredExpenses = allExpenses.filter(exp =>
+              myEmployees.some(emp => emp.email === exp.submittedBy)
+            )
+          }
 
-          setExpenses(myTeamExpenses)
+          setExpenses(filteredExpenses)
         }
       } catch (error) {
         console.error('Error fetching expenses:', error)
@@ -42,7 +51,7 @@ const ManagerApprovals = () => {
     }
 
     fetchExpenses()
-  }, [user?.email])
+  }, [user?.email, user?.role])
 
   const approve = async (expenseId) => {
     try {
@@ -183,6 +192,7 @@ const ManagerApprovals = () => {
                   const submitter = allUsers.find(u => u.email === expense.submittedBy)
                   const initials = submitter ? submitter.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'
                   const ownerName = submitter ? submitter.name : expense.submittedBy
+                  const isSpecialRole = submitter && (submitter.role === 'CFO' || submitter.role === 'Director')
 
                   return (
                     <tr
@@ -208,7 +218,10 @@ const ManagerApprovals = () => {
                           >
                             {initials}
                           </div>
-                          {ownerName}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {ownerName}
+                            {isSpecialRole && <span style={{ fontSize: 12 }}>⭐</span>}
+                          </div>
                         </div>
                       </td>
                       <td>

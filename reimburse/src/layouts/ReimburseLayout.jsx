@@ -19,7 +19,11 @@ const ReimburseLayout = () => {
 
   const userRole = user.role.toLowerCase()
   const curLabel = `${user?.currencyCode} ${user?.currencySymbol}`
-  const roleLabel = userRole === 'employee' ? `Employee · ${curLabel}` : userRole === 'manager' ? `Manager · ${curLabel}` : `Admin · ${curLabel}`
+  const roleLabel = userRole === 'employee' ? `Employee · ${curLabel}` :
+                   userRole === 'manager' ? `Manager · ${curLabel}` :
+                   userRole === 'cfo' ? `CFO · ${curLabel}` :
+                   userRole === 'director' ? `Director · ${curLabel}` :
+                   `Admin · ${curLabel}`
 
   return (
     <>
@@ -53,6 +57,17 @@ const ReimburseLayout = () => {
           </div>
         )}
 
+        {(userRole === 'cfo' || userRole === 'director') && (
+          <div style={{ display: 'flex' }}>
+            <NavLink to='/manager/approvals' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Approvals to Review
+            </NavLink>
+            <NavLink to='/manager/expenses' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Team Expenses
+            </NavLink>
+          </div>
+        )}
+
         {userRole === 'admin' && (
           <div style={{ display: 'flex' }}>
             <NavLink to='/admin/users' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
@@ -71,7 +86,11 @@ const ReimburseLayout = () => {
           <div className='nav-user'>
             <div className='av'>{initials(user?.name)}</div>
             <div>
-              <div style={{ fontSize: '12.5px', color: 'var(--text)' }}>{user?.name}</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                {user?.name}
+                {['CFO', 'Director'].includes(user?.name) && <span style={{ fontSize: 12 }}>⭐</span>}
+                {(userRole === 'cfo' || userRole === 'director') && <span style={{ fontSize: 12 }}>⭐</span>}
+              </div>
               <div style={{ fontSize: '10px', color: 'var(--text3)', fontFamily: 'var(--font-m)' }} id='rlabel'>
                 {roleLabel}
               </div>

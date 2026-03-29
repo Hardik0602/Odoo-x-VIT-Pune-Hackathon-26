@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { getAllUsers, addRegisteredUser } from '../../data/userStore'
 import { toast } from 'react-toastify'
 
 const Row = ({ initials, name, email, manager, roleDefault }) => {
   const [role, setRole] = useState(roleDefault)
+  const isSpecialRole = role === 'CFO' || role === 'Director'
   return (
     <div
       style={{
@@ -23,7 +24,10 @@ const Row = ({ initials, name, email, manager, roleDefault }) => {
           {initials}
         </div>
         <div>
-          <div style={{ fontSize: 13 }}>{name}</div>
+          <div style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+            {name}
+            {isSpecialRole && <span style={{ fontSize: 12 }}>⭐</span>}
+          </div>
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>{email}</div>
         </div>
       </div>
@@ -31,6 +35,8 @@ const Row = ({ initials, name, email, manager, roleDefault }) => {
         <select className='fi' style={{ padding: '4px 7px', fontSize: 11.5 }} value={role} onChange={e => setRole(e.target.value)}>
           <option>Admin</option>
           <option>Manager</option>
+          <option>CFO</option>
+          <option>Director</option>
           <option>Employee</option>
         </select>
       </div>
@@ -62,7 +68,28 @@ const AdminUsers = () => {
     manager: ''
   })
   const allUsers = useMemo(() => getAllUsers(), [])
-  const managers = useMemo(() => allUsers.filter(u => u.role === 'manager' || u.role === 'Manager'), [allUsers])
+  const managers = useMemo(() => allUsers.filter(u => 
+    u.role === 'manager' || u.role === 'Manager' || 
+    u.role === 'cfo' || u.role === 'CFO' ||
+    u.role === 'director' || u.role === 'Director'
+  ), [allUsers])
+
+  // Find default manager (CFO or Director, preferring CFO)
+  const defaultManager = useMemo(() => {
+    const cfo = allUsers.find(u => u.role?.toLowerCase() === 'cfo')
+    if (cfo) return cfo.email
+    const director = allUsers.find(u => u.role?.toLowerCase() === 'director')
+    if (director) return director.email
+    // Fallback to first manager if no CFO/Director
+    return managers.length > 0 ? managers[0].email : ''
+  }, [allUsers, managers])
+
+  // Set default manager in form when it changes
+  useEffect(() => {
+    if (defaultManager) {
+      setFormData(prev => ({ ...prev, manager: defaultManager }))
+    }
+  }, [defaultManager])
 
   const handleInvite = () => {
     if (!formData.name.trim() || !formData.email.trim()) {
@@ -93,7 +120,7 @@ const AdminUsers = () => {
 
     addRegisteredUser(newUser)
     toast.success(`User ${formData.name} invited successfully`)
-    setFormData({ name: '', email: '', password: 'abcd@123', role: 'Employee', manager: '' })
+    setFormData({ name: '', email: '', password: 'abcd@123', role: 'Employee', manager: defaultManager })
     setShowInviteModal(false)
   }
 

@@ -58,7 +58,7 @@ const router = createBrowserRouter(
         <Route
           path='manager/approvals'
           element={
-            <RoleProtectedRoute allowedRoles={['manager', 'admin']}>
+            <RoleProtectedRoute allowedRoles={['manager', 'admin', 'cfo', 'director']}>
               <ManagerApprovals />
             </RoleProtectedRoute>
           }
@@ -66,7 +66,7 @@ const router = createBrowserRouter(
         <Route
           path='manager/expenses'
           element={
-            <RoleProtectedRoute allowedRoles={['manager', 'admin']}>
+            <RoleProtectedRoute allowedRoles={['manager', 'admin', 'cfo', 'director']}>
               <EmployeeDashboard />
             </RoleProtectedRoute>
           }
