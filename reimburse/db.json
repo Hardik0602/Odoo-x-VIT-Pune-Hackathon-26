@@ -49,6 +49,50 @@
           "comment": ""
         }
       ]
+    },
+    {
+      "id": "exp-1774772028762",
+      "description": "taco bell run",
+      "category": "Meals",
+      "amount": "999999999986.00",
+      "originalAmount": "999999999986",
+      "originalCurrency": "INR",
+      "submittedBy": "employee@company.com",
+      "submittedDate": "2026-03-29",
+      "date": "2026-03-29",
+      "status": "rejected",
+      "notes": "tacossssssssssssssssssss",
+      "approvals": [
+        {
+          "by": "manager@company.com",
+          "role": "manager",
+          "decision": "rejected",
+          "date": "2026-03-29T08:14:05.505Z",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "exp-1774772207915",
+      "description": "taco bell run born again",
+      "category": "Meals",
+      "amount": "10000000000000000.00",
+      "originalAmount": "9999999999999999",
+      "originalCurrency": "INR",
+      "submittedBy": "employee@company.com",
+      "submittedDate": "2026-03-29",
+      "date": "2026-03-29",
+      "status": "approved",
+      "notes": "",
+      "approvals": [
+        {
+          "by": "manager@company.com",
+          "role": "manager",
+          "decision": "approved",
+          "date": "2026-03-29T08:19:38.228Z",
+          "comment": ""
+        }
+      ]
     }
   ]
 }
