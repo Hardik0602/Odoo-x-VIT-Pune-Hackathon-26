@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
+import { getAllUsers, addRegisteredUser } from '../../data/userStore'
+import { toast } from 'react-toastify'
 
 const Row = ({ initials, name, email, manager, roleDefault }) => {
   const [role, setRole] = useState(roleDefault)
@@ -51,6 +53,50 @@ const Toggle = () => {
 }
 
 const AdminUsers = () => {
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: 'abcd@123',
+    role: 'Employee',
+    manager: ''
+  })
+  const allUsers = useMemo(() => getAllUsers(), [])
+  const managers = useMemo(() => allUsers.filter(u => u.role === 'manager' || u.role === 'Manager'), [allUsers])
+
+  const handleInvite = () => {
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Name and email are required')
+      return
+    }
+    if (!formData.email.includes('@')) {
+      toast.error('Invalid email address')
+      return
+    }
+    
+    const role = formData.role.toLowerCase()
+    if (role === 'employee' && !formData.manager) {
+      toast.error('Please select a manager for employees')
+      return
+    }
+
+    const newUser = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: role,
+      manager: role === 'employee' ? formData.manager : null,
+      currencyCode: 'INR',
+      currencySymbol: '₹',
+      country: 'India'
+    }
+
+    addRegisteredUser(newUser)
+    toast.success(`User ${formData.name} invited successfully`)
+    setFormData({ name: '', email: '', password: 'abcd@123', role: 'Employee', manager: '' })
+    setShowInviteModal(false)
+  }
+
   return (
     <div className='view'>
       <div className='ph'>
@@ -58,7 +104,7 @@ const AdminUsers = () => {
           <div className='pt'>User management</div>
           <div className='ps'>Create users, assign roles, set manager relationships</div>
         </div>
-        <button type='button' className='btn bp'>
+        <button type='button' className='btn bp' onClick={() => setShowInviteModal(true)}>
           + Invite user
         </button>
       </div>
@@ -66,7 +112,7 @@ const AdminUsers = () => {
         <div className='panel'>
           <div className='ph2'>
             <div className='pt2'>All users</div>
-            <span className='tag'>5 members</span>
+            <span className='tag'>{allUsers.length} members</span>
           </div>
           <div
             style={{
@@ -83,11 +129,19 @@ const AdminUsers = () => {
             ))}
           </div>
           <div>
-            <Row initials='RA' name='Ravi Anand' email='ravi@acme.io' manager='—' roleDefault='Admin' />
-            <Row initials='VS' name='Vikram Singh' email='vikram@acme.io' manager='—' roleDefault='Manager' />
-            <Row initials='PM' name='Priya Menon' email='priya@acme.io' manager='Vikram Singh' roleDefault='Employee' />
-            <Row initials='SM' name='Sneha M.' email='sneha@acme.io' manager='Vikram Singh' roleDefault='Employee' />
-            <Row initials='AK' name='Arjun Kumar' email='arjun@acme.io' manager='Vikram Singh' roleDefault='Employee' />
+            {allUsers.map((user, idx) => {
+              const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+              return (
+                <Row
+                  key={idx}
+                  initials={initials}
+                  name={user.name}
+                  email={user.email}
+                  manager='—'
+                  roleDefault={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                />
+              )
+            })}
           </div>
         </div>
 
@@ -100,33 +154,37 @@ const AdminUsers = () => {
               When ON: employee&apos;s direct manager must approve their expense <em>first</em>, before the formal chain begins.
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                { i: 'PM', g: 'linear-gradient(135deg,#E8A93C,#E05252)', n: 'Priya Menon', m: 'Manager: Vikram Singh' },
-                { i: 'SM', g: 'linear-gradient(135deg,#2ECC8A,#5B9CF6)', n: 'Sneha M.', m: 'Manager: Vikram Singh' },
-                { i: 'AK', g: 'linear-gradient(135deg,#A78BFA,#E05252)', n: 'Arjun Kumar', m: 'Manager: Vikram Singh' }
-              ].map((u, idx) => (
-                <div
-                  key={u.i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '11px 13px',
-                    background: 'var(--surface2)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8
-                  }}
-                >
-                  <div className='av' style={{ width: 26, height: 26, fontSize: 9, background: u.g }}>
-                    {u.i}
+              {allUsers.filter(u => u.role.toLowerCase() === 'employee').map((u, idx) => {
+                const initials = u.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                const gradients = [
+                  'linear-gradient(135deg,#E8A93C,#E05252)',
+                  'linear-gradient(135deg,#2ECC8A,#5B9CF6)',
+                  'linear-gradient(135deg,#A78BFA,#E05252)'
+                ]
+                return (
+                  <div
+                    key={u.email}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 13px',
+                      background: 'var(--surface2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8
+                    }}
+                  >
+                    <div className='av' style={{ width: 26, height: 26, fontSize: 9, background: gradients[idx % gradients.length] }}>
+                      {initials}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13 }}>{u.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text2)' }}>Manager: Assigned</div>
+                    </div>
+                    <Toggle key={u.email} />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13 }}>{u.n}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text2)' }}>{u.m}</div>
-                  </div>
-                  <Toggle key={idx} />
-                </div>
-              ))}
+                )
+              })}
             </div>
             <div
               style={{
@@ -144,6 +202,150 @@ const AdminUsers = () => {
           </div>
         </div>
       </div>
+
+      {showInviteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--bg)',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            width: 400,
+            maxWidth: '90%',
+            padding: 20
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Invite New User</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Full Name</label>
+                <input
+                  type='text'
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder='John Doe'
+                  style={{
+                    width: '100%',
+                    padding: '9px 11px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    background: 'var(--surface)',
+                    color: 'var(--text)',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Email</label>
+                <input
+                  type='email'
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder='john@company.com'
+                  style={{
+                    width: '100%',
+                    padding: '9px 11px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    background: 'var(--surface)',
+                    color: 'var(--text)',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Role</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value, manager: '' })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 11px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    background: 'var(--surface)',
+                    color: 'var(--text)',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option>Admin</option>
+                  <option>Manager</option>
+                  <option>Employee</option>
+                </select>
+              </div>
+              {formData.role === 'Employee' && (
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Manager</label>
+                  <select
+                    value={formData.manager}
+                    onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '9px 11px',
+                      border: '1px solid var(--border)',
+                      borderRadius: 6,
+                      fontSize: 13,
+                      background: 'var(--surface)',
+                      color: 'var(--text)',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value=''>Select a manager</option>
+                    {managers.map((m) => (
+                      <option key={m.email} value={m.name}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type='button'
+                onClick={() => setShowInviteModal(false)}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid var(--border)',
+                  background: 'transparent',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 500
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type='button'
+                onClick={handleInvite}
+                style={{
+                  padding: '9px 16px',
+                  background: 'var(--accent)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 500
+                }}
+              >
+                Send Invite
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
+import { getAllUsers } from '../../data/userStore'
 
 const ManagerApprovals = () => {
   const { user } = useAuth()
@@ -8,12 +9,85 @@ const ManagerApprovals = () => {
   const code = user?.currencyCode || 'INR'
   const [sel, setSel] = useState(0)
   const [comment, setComment] = useState('')
+  const [expenses, setExpenses] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const approve = () => {
-    toast.success(`Approved! Next approver notified.${comment ? ` Comment: ${comment}` : ''}`)
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/expenses')
+        if (res.ok) {
+          const allExpenses = await res.json()
+          const allUsers = getAllUsers()
+
+          // Find employees who report to this manager
+          const myEmployees = allUsers.filter(u =>
+            u.role?.toLowerCase() === 'employee' &&
+            u.manager === user?.email
+          )
+
+          // Filter expenses submitted by my employees
+          const myTeamExpenses = allExpenses.filter(exp =>
+            myEmployees.some(emp => emp.email === exp.submittedBy)
+          )
+
+          setExpenses(myTeamExpenses)
+        }
+      } catch (error) {
+        console.error('Error fetching expenses:', error)
+        toast.error('Failed to load expenses')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchExpenses()
+  }, [user?.email])
+
+  const approve = async (expenseId) => {
+    try {
+      const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' })
+      })
+
+      if (res.ok) {
+        toast.success(`Approved!${comment ? ` Comment: ${comment}` : ''}`)
+        // Refresh expenses
+        setExpenses(prev => prev.map(exp =>
+          exp.id === expenseId ? { ...exp, status: 'approved' } : exp
+        ))
+      } else {
+        toast.error('Failed to approve expense')
+      }
+    } catch (error) {
+      console.error('Error approving expense:', error)
+      toast.error('Failed to approve expense')
+    }
   }
-  const reject = () => {
-    toast.error(`Rejected. Employee notified.${comment ? ` Comment: ${comment}` : ''}`)
+
+  const reject = async (expenseId) => {
+    try {
+      const res = await fetch(`http://localhost:3000/expenses/${expenseId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' })
+      })
+
+      if (res.ok) {
+        toast.error(`Rejected.${comment ? ` Comment: ${comment}` : ''}`)
+        // Refresh expenses
+        setExpenses(prev => prev.map(exp =>
+          exp.id === expenseId ? { ...exp, status: 'rejected' } : exp
+        ))
+      } else {
+        toast.error('Failed to reject expense')
+      }
+    } catch (error) {
+      console.error('Error rejecting expense:', error)
+      toast.error('Failed to reject expense')
+    }
   }
 
   return (
@@ -22,7 +96,7 @@ const ManagerApprovals = () => {
         <div>
           <div className='pt'>Approvals to review</div>
           <div className='ps'>
-            3 expenses waiting · amounts shown in company currency {code} {sym}
+            {expenses.length} expenses waiting · amounts shown in company currency {code} {sym}
           </div>
         </div>
       </div>
@@ -91,108 +165,101 @@ const ManagerApprovals = () => {
               </tr>
             </thead>
             <tbody>
-              {[
-                {
-                  id: 0,
-                  title: 'Business lunch — Q2',
-                  sub: '28 Jun · Bistro Café',
-                  owner: 'Priya Menon',
-                  av: 'linear-gradient(135deg,#E8A93C,#E05252)',
-                  initials: 'PM',
-                  cat: '🍽 Meals',
-                  amt: `${sym}6,840`,
-                  subamt: '$82 USD orig.',
-                  st: 'Step 2'
-                },
-                {
-                  id: 1,
-                  title: 'Client travel — BLR',
-                  sub: '24 Jun',
-                  owner: 'Sneha M.',
-                  av: 'linear-gradient(135deg,#2ECC8A,#5B9CF6)',
-                  initials: 'SM',
-                  cat: '✈ Travel',
-                  amt: `${sym}12,300`,
-                  subamt: null,
-                  st: 'Step 1'
-                },
-                {
-                  id: 2,
-                  title: 'Office supplies',
-                  sub: '22 Jun',
-                  owner: 'Rohit P.',
-                  av: 'linear-gradient(135deg,#A78BFA,#E05252)',
-                  initials: 'RP',
-                  cat: '📦 Supplies',
-                  amt: `${sym}3,200`,
-                  subamt: null,
-                  st: 'Step 1'
-                }
-              ].map(row => (
-                <tr
-                  key={row.id}
-                  id={`mr${row.id}`}
-                  style={{ background: sel === row.id ? 'var(--adim)' : undefined }}
-                  onClick={() => setSel(row.id)}
-                >
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{row.title}</div>
-                    <div className='ts2'>{row.sub}</div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div
-                        className='av'
-                        style={{
-                          width: 22,
-                          height: 22,
-                          fontSize: 9,
-                          background: row.av
-                        }}
-                      >
-                        {row.initials}
-                      </div>
-                      {row.owner}
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: 12 }}>{row.cat}</span>
-                  </td>
-                  <td>
-                    <span className={'badge ' + (row.st === 'Step 2' ? 'b-rv' : 'b-wa')}>{row.st}</span>
-                  </td>
-                  <td>
-                    <div className='amt'>{row.amt}</div>
-                    {row.subamt && <div className='amts'>{row.subamt}</div>}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        type='button'
-                        className='btn bs'
-                        style={{ padding: '4px 8px', fontSize: 11 }}
-                        onClick={e => {
-                          e.stopPropagation()
-                          approve()
-                        }}
-                      >
-                        ✓
-                      </button>
-                      <button
-                        type='button'
-                        className='btn bd'
-                        style={{ padding: '4px 8px', fontSize: 11 }}
-                        onClick={e => {
-                          e.stopPropagation()
-                          reject()
-                        }}
-                      >
-                        ✗
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+                    Loading expenses...
                   </td>
                 </tr>
-              ))}
+              ) : expenses.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+                    No expenses pending approval
+                  </td>
+                </tr>
+              ) : (
+                expenses.map((expense, index) => {
+                  const allUsers = getAllUsers()
+                  const submitter = allUsers.find(u => u.email === expense.submittedBy)
+                  const initials = submitter ? submitter.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'
+                  const ownerName = submitter ? submitter.name : expense.submittedBy
+
+                  return (
+                    <tr
+                      key={expense.id}
+                      id={`mr${index}`}
+                      style={{ background: sel === index ? 'var(--adim)' : undefined }}
+                      onClick={() => setSel(index)}
+                    >
+                      <td>
+                        <div style={{ fontWeight: 500 }}>{expense.description}</div>
+                        <div className='ts2'>{new Date(expense.date).toLocaleDateString()}</div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div
+                            className='av'
+                            style={{
+                              width: 22,
+                              height: 22,
+                              fontSize: 9,
+                              background: 'linear-gradient(135deg,#2ECC8A,#5B9CF6)'
+                            }}
+                          >
+                            {initials}
+                          </div>
+                          {ownerName}
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: 12 }}>
+                          {expense.category === 'Meals' ? '🍽 Meals' :
+                           expense.category === 'Travel' ? '✈ Travel' :
+                           expense.category === 'Supplies' ? '📦 Supplies' :
+                           '📄 Other'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={'badge ' + (expense.status === 'pending' ? 'b-wa' : 'b-rv')}>
+                          {expense.status === 'pending' ? 'Pending' : expense.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className='amt'>{sym}{parseFloat(expense.amount).toLocaleString()}</div>
+                        {expense.originalCurrency !== 'INR' && (
+                          <div className='amts'>{expense.originalAmount} {expense.originalCurrency} orig.</div>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button
+                            type='button'
+                            className='btn bs'
+                            style={{ padding: '4px 8px', fontSize: 11 }}
+                            onClick={e => {
+                              e.stopPropagation()
+                              approve(expense.id)
+                            }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type='button'
+                            className='btn bd'
+                            style={{ padding: '4px 8px', fontSize: 11 }}
+                            onClick={e => {
+                              e.stopPropagation()
+                              reject(expense.id)
+                            }}
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>

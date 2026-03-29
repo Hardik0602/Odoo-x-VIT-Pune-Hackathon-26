@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 const RATES = {
@@ -12,15 +13,18 @@ const RATES = {
 
 const ExpenseSubmit = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const sym = user?.currencySymbol || '₹'
   const code = user?.currencyCode || 'INR'
 
-  const [ocrDone, setOcrDone] = useState(false)
-  const [trailOpen, setTrailOpen] = useState(false)
-  const [desc, setDesc] = useState('Business lunch — Q2 review')
+  const [desc, setDesc] = useState('')
   const [currKey, setCurrKey] = useState('INR|₹|1')
-  const [amount, setAmount] = useState('82')
+  const [amount, setAmount] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [notes, setNotes] = useState('')
+  const [category, setCategory] = useState('Meals')
   const [stepState, setStepState] = useState('draft')
+  const [loading, setLoading] = useState(false)
 
   const convLine = useMemo(() => {
     const parts = currKey.split('|')
@@ -33,17 +37,57 @@ const ExpenseSubmit = () => {
     return `= ${sym}${converted} ${code} at rate ${parts[2]}`
   }, [amount, currKey, sym, code])
 
-  const runOcr = () => {
-    setOcrDone(true)
-    setDesc('Business lunch — Bistro Café')
-    setAmount('1038')
-    setCurrKey('INR|₹|1')
-  }
+  const submit = async () => {
+    if (!desc.trim()) {
+      toast.error('Description is required')
+      return
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
 
-  const submit = () => {
-    setTrailOpen(true)
-    setStepState('waiting')
-    toast.success('Submitted! Your manager has been notified for approval.')
+    setLoading(true)
+    try {
+      const parts = currKey.split('|')
+      const rate = RATES[currKey] ?? 1
+      const convertedAmount = (parseFloat(amount) * rate).toFixed(2)
+
+      const newExpense = {
+        id: `exp-${Date.now()}`,
+        description: desc,
+        category: category,
+        amount: convertedAmount,
+        originalAmount: amount,
+        originalCurrency: parts[0],
+        submittedBy: user?.email,
+        submittedDate: new Date().toISOString().split('T')[0],
+        date: date,
+        status: 'pending',
+        notes: notes
+      }
+
+      const res = await fetch('http://localhost:3000/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newExpense)
+      })
+
+      if (res.ok) {
+        setStepState('waiting')
+        toast.success('Expense submitted! Your manager has been notified.')
+        setTimeout(() => {
+          navigate('/employee/claims')
+        }, 1500)
+      } else {
+        toast.error('Failed to submit expense')
+      }
+    } catch (error) {
+      console.log('Error:', error)
+      toast.error('Failed to submit expense')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -96,8 +140,7 @@ const ExpenseSubmit = () => {
               <div
                 role='button'
                 tabIndex={0}
-                onClick={runOcr}
-                onKeyDown={e => e.key === 'Enter' && runOcr()}
+                onKeyDown={e => e.key === 'Enter'}
                 style={{
                   border: '1.5px dashed var(--border2)',
                   borderRadius: 'var(--r)',
@@ -105,45 +148,12 @@ const ExpenseSubmit = () => {
                   cursor: 'pointer',
                   transition: 'all .2s',
                   background: 'var(--surface2)',
-                  textAlign: 'center',
-                  borderColor: ocrDone ? 'var(--accent)' : undefined
+                  textAlign: 'center'
                 }}
               >
-                <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>📎 Upload or drag receipt here</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>PNG, JPG or PDF · fields extracted automatically</div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 3 }}>📎 Upload or drag receipt here (optional)</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>PNG, JPG or PDF</div>
               </div>
-              {ocrDone && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 11, color: 'var(--green)', fontFamily: 'var(--font-m)', marginBottom: 8 }}>
-                    ✓ Receipt scanned — fields auto-filled
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
-                    {[
-                      ['MERCHANT', 'Bistro Café'],
-                      ['AMOUNT', `${sym}1,038`],
-                      ['DATE', '28 Jun 2025'],
-                      ['CATEGORY', 'Meals']
-                    ].map(([k, v]) => (
-                      <div
-                        key={k}
-                        style={{
-                          background: 'var(--adim)',
-                          border: '1px solid rgba(212,245,96,.15)',
-                          borderRadius: 7,
-                          padding: '8px 10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 7
-                        }}
-                      >
-                        <span style={{ fontSize: 9.5, color: 'var(--text3)', fontFamily: 'var(--font-m)', width: 60 }}>{k}</span>
-                        <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>{v}</span>
-                        <span style={{ marginLeft: 'auto', color: 'var(--green)' }}>✓</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -161,7 +171,7 @@ const ExpenseSubmit = () => {
                     id='fdesc'
                     className='fi'
                     type='text'
-                    placeholder='e.g. Client lunch — Q2 review'
+                    placeholder='e.g. Client lunch'
                     value={desc}
                     onChange={e => setDesc(e.target.value)}
                   />
@@ -170,11 +180,11 @@ const ExpenseSubmit = () => {
                   <label className='fl' htmlFor='fcat'>
                     Category
                   </label>
-                  <select id='fcat' className='fi' defaultValue='🍽 Meals & Entertainment'>
-                    <option>🍽 Meals & Entertainment</option>
-                    <option>✈ Travel & Transport</option>
+                  <select id='fcat' className='fi' value={category} onChange={e => setCategory(e.target.value)}>
+                    <option>🍽 Meals</option>
+                    <option>✈ Travel</option>
                     <option>🏨 Accommodation</option>
-                    <option>☁ Software / Subscriptions</option>
+                    <option>☁ Software</option>
                     <option>🖥 Hardware</option>
                     <option>🎉 Events</option>
                     <option>📦 Other</option>
@@ -184,8 +194,8 @@ const ExpenseSubmit = () => {
                   <label className='fl' htmlFor='fpaid'>
                     Paid by
                   </label>
-                  <select id='fpaid' className='fi' defaultValue='Self (reimbursement)'>
-                    <option>Self (reimbursement)</option>
+                  <select id='fpaid' className='fi' defaultValue='Self'>
+                    <option>Self</option>
                     <option>Company card</option>
                   </select>
                 </div>
@@ -216,7 +226,7 @@ const ExpenseSubmit = () => {
                   <label className='fl' htmlFor='fdate'>
                     Date of expense
                   </label>
-                  <input id='fdate' className='fi' type='date' defaultValue='2025-06-28' />
+                  <input id='fdate' className='fi' type='date' value={date} onChange={e => setDate(e.target.value)} />
                 </div>
                 <div className='fg full'>
                   <label className='fl' htmlFor='fnotes'>
@@ -228,7 +238,8 @@ const ExpenseSubmit = () => {
                     rows={2}
                     style={{ resize: 'none' }}
                     placeholder='Context for approvers…'
-                    defaultValue='Client Q2 review lunch. 3 attendees — Priya, Arjun, client.'
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
                   />
                 </div>
               </div>
@@ -245,8 +256,8 @@ const ExpenseSubmit = () => {
                   <button type='button' className='btn bg'>
                     Save draft
                   </button>
-                  <button type='button' className='btn bp' onClick={submit}>
-                    Submit for approval →
+                  <button type='button' className='btn bp' onClick={submit} disabled={loading}>
+                    {loading ? 'Submitting...' : 'Submit for approval →'}
                   </button>
                 </div>
               </div>
@@ -305,45 +316,6 @@ const ExpenseSubmit = () => {
               </div>
             </div>
           </div>
-
-          {trailOpen && (
-            <div className='panel'>
-              <div className='ph2'>
-                <div className='pt2'>Approval trail</div>
-                <span className='badge b-rv'>In Review</span>
-              </div>
-              <div className='pb'>
-                <div className='tl'>
-                  <div className='tli'>
-                    <div className='tldot done'>✓</div>
-                    <div className='tlline' />
-                    <div className='tlc'>
-                      <div className='tlt'>Vikram Singh — Manager</div>
-                      <div className='tls'>Approved · 28 Jun 4:12 PM</div>
-                      <div className='tlcmt'>&quot;Valid business purpose.&quot;</div>
-                    </div>
-                  </div>
-                  <div className='tli'>
-                    <div className='tldot act'>2</div>
-                    <div className='tlline' />
-                    <div className='tlc'>
-                      <div className='tlt'>Finance — awaiting</div>
-                      <div className='tls'>Notification sent to Rahul</div>
-                    </div>
-                  </div>
-                  <div className='tli'>
-                    <div className='tldot idle'>3</div>
-                    <div className='tlc'>
-                      <div className='tlt'>Director — not started</div>
-                      <div className='tls' style={{ color: 'var(--text3)' }}>
-                        Waiting for step 2
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

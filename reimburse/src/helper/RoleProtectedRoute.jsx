@@ -6,11 +6,15 @@ const RoleProtectedRoute = ({ children, allowedRoles }) => {
   if (!user) {
     return <Navigate to='/login' />
   }
-  if (!allowedRoles.includes(user.role)) {
-    if (user.role === 'admin') {
-      return <Navigate to='/admin' />
+  const userRole = user.role.toLowerCase()
+  const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase())
+  if (!normalizedAllowedRoles.includes(userRole)) {
+    if (userRole === 'admin') {
+      return <Navigate to='/admin/users' />
+    } else if (userRole === 'manager') {
+      return <Navigate to='/manager/approvals' />
     } else {
-      return <Navigate to='/' />
+      return <Navigate to='/employee/dashboard' />
     }
   }
   return children

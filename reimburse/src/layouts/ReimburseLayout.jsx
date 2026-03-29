@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import React from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function initials (name) {
@@ -11,26 +11,15 @@ function initials (name) {
 const ReimburseLayout = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-  const [uiRole, setUiRole] = useState(() => (user?.role === 'admin' ? 'a' : 'e'))
 
-  useEffect(() => {
-    const path = location.pathname
-    if (path.startsWith('/admin')) setUiRole('a')
-    else if (path.startsWith('/manager')) setUiRole('m')
-    else setUiRole('e')
-  }, [location.pathname])
-
-  const switchRole = r => {
-    setUiRole(r)
-    if (r === 'e') navigate('/employee/dashboard')
-    else if (r === 'm') navigate('/manager/approvals')
-    else navigate('/admin/users')
+  if (!user) {
+    navigate('/login')
+    return null
   }
 
+  const userRole = user.role.toLowerCase()
   const curLabel = `${user?.currencyCode} ${user?.currencySymbol}`
-  const roleLabel =
-    uiRole === 'e' ? `Employee · ${curLabel}` : uiRole === 'm' ? `Manager · ${curLabel}` : `Admin · ${curLabel}`
+  const roleLabel = userRole === 'employee' ? `Employee · ${curLabel}` : userRole === 'manager' ? `Manager · ${curLabel}` : `Admin · ${curLabel}`
 
   return (
     <>
@@ -39,63 +28,46 @@ const ReimburseLayout = () => {
           Re<span>imburse</span>
         </div>
 
-        <div style={{ display: uiRole === 'e' ? 'flex' : 'none' }}>
-          <NavLink to='/employee/dashboard' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            Dashboard
-          </NavLink>
-          <NavLink to='/employee/submit' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            Submit Expense
-          </NavLink>
-          <NavLink to='/employee/claims' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            My Claims
-          </NavLink>
-        </div>
+        {userRole === 'employee' && (
+          <div style={{ display: 'flex' }}>
+            <NavLink to='/employee/dashboard' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Dashboard
+            </NavLink>
+            <NavLink to='/employee/submit' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Submit Expense
+            </NavLink>
+            <NavLink to='/employee/claims' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              My Claims
+            </NavLink>
+          </div>
+        )}
 
-        <div style={{ display: uiRole === 'm' ? 'flex' : 'none' }}>
-          <NavLink to='/manager/approvals' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            Approvals to Review <span className='nbadge'>3</span>
-          </NavLink>
-          <NavLink to='/manager/expenses' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            My Expenses
-          </NavLink>
-        </div>
+        {userRole === 'manager' && (
+          <div style={{ display: 'flex' }}>
+            <NavLink to='/manager/approvals' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Approvals to Review
+            </NavLink>
+            <NavLink to='/manager/expenses' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Team Expenses
+            </NavLink>
+          </div>
+        )}
 
-        <div style={{ display: uiRole === 'a' ? 'flex' : 'none' }}>
-          <NavLink to='/admin/users' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            User Management
-          </NavLink>
-          <NavLink to='/admin/rules' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            Approval Rules
-          </NavLink>
-          <NavLink to='/admin/expenses' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
-            All Expenses
-          </NavLink>
-        </div>
+        {userRole === 'admin' && (
+          <div style={{ display: 'flex' }}>
+            <NavLink to='/admin/users' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              User Management
+            </NavLink>
+            <NavLink to='/admin/rules' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              Approval Rules
+            </NavLink>
+            <NavLink to='/admin/expenses' className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')}>
+              All Expenses
+            </NavLink>
+          </div>
+        )}
 
         <div className='nav-right'>
-          <div className='role-btn-wrap' id='role-btns'>
-            <button
-              type='button'
-              className={'role-btn ' + (uiRole === 'e' ? 'role-btn--active' : 'role-btn--idle')}
-              onClick={() => switchRole('e')}
-            >
-              Employee
-            </button>
-            <button
-              type='button'
-              className={'role-btn ' + (uiRole === 'm' ? 'role-btn--active' : 'role-btn--idle')}
-              onClick={() => switchRole('m')}
-            >
-              Manager
-            </button>
-            <button
-              type='button'
-              className={'role-btn ' + (uiRole === 'a' ? 'role-btn--active' : 'role-btn--idle')}
-              onClick={() => switchRole('a')}
-            >
-              Admin
-            </button>
-          </div>
           <div className='nav-user'>
             <div className='av'>{initials(user?.name)}</div>
             <div>

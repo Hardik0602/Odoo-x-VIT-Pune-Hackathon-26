@@ -15,6 +15,7 @@ function normalizeUser (u) {
   if (!u) return null
   return {
     ...u,
+    role: (u.role || 'employee').toLowerCase(),
     currencyCode: u.currencyCode || 'INR',
     currencySymbol: u.currencySymbol || '₹',
     country: u.country || 'India'
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       country: meta.country,
       currencyCode: meta.currencyCode,
       currencySymbol: meta.currencySymbol,
-      role: 'manager'
+      role: 'admin'
     })
     addRegisteredUser(newUser)
     setUserListVersion(v => v + 1)

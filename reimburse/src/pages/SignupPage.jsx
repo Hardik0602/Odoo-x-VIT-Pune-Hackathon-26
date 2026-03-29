@@ -41,7 +41,7 @@ const SignupPage = () => {
         return
       }
       toast.success('Company account created')
-      navigate('/employee/dashboard')
+      navigate('/admin/users')
     }, 600)
   }
   if (user) {
