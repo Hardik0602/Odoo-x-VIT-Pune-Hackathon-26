@@ -61,6 +61,7 @@ const ExpenseSubmit = () => {
         originalAmount: amount,
         originalCurrency: parts[0],
         submittedBy: user?.email,
+        submittedByName: user?.name || '',
         submittedDate: new Date().toISOString().split('T')[0],
         date: date,
         status: 'pending',

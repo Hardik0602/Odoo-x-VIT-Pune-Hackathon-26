@@ -23,19 +23,25 @@ const ManagerApprovals = () => {
 
           let filteredExpenses = allExpenses
 
-          // For CFO and Director, show all expenses from all employees
+          // For CFO and Director, show all "pending" expenses from all employees
           if (userRole === 'cfo' || userRole === 'director') {
             const allEmployees = allUsers.filter(u => u.role?.toLowerCase() === 'employee')
             filteredExpenses = allExpenses.filter(exp =>
+              exp.status === 'pending' &&
               allEmployees.some(emp => emp.email === exp.submittedBy)
             )
           } else {
-            // For regular managers, show only expenses from their direct reports
+            // For regular managers, show only "pending" expenses from their direct reports
             const myEmployees = allUsers.filter(u =>
               u.role?.toLowerCase() === 'employee' &&
-              u.manager === user?.email
+              (
+                u.manager === user?.email ||
+                u.manager === user?.name ||
+                (typeof u.manager === 'string' && u.manager.toLowerCase() === (user?.email || '').toLowerCase())
+              )
             )
             filteredExpenses = allExpenses.filter(exp =>
+              exp.status === 'pending' &&
               myEmployees.some(emp => emp.email === exp.submittedBy)
             )
           }
@@ -257,8 +263,8 @@ const ManagerApprovals = () => {
                 expenses.map((expense, index) => {
                   const allUsers = getAllUsers()
                   const submitter = allUsers.find(u => u.email === expense.submittedBy)
-                  const initials = submitter ? submitter.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'
-                  const ownerName = submitter ? submitter.name : expense.submittedBy
+                  const ownerName = expense.submittedByName || submitter?.name || expense.submittedBy
+                  const initials = ownerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'
                   const isSpecialRole = submitter && (submitter.role === 'CFO' || submitter.role === 'Director')
 
                   return (

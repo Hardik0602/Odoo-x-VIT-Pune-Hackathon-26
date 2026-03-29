@@ -5,6 +5,8 @@ import { toast } from 'react-toastify'
 const Row = ({ initials, name, email, manager, roleDefault }) => {
   const [role, setRole] = useState(roleDefault)
   const isSpecialRole = role === 'CFO' || role === 'Director'
+  const managerText = manager ? manager : 'null'
+  const managerTextColor = manager ? 'var(--text2)' : 'var(--text3)'
   const handleSendPassword = () => {
     toast.success(`Password reset link sent to ${email}. Temporarily use abcd@123 and change it later.`)
   }
@@ -12,9 +14,9 @@ const Row = ({ initials, name, email, manager, roleDefault }) => {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 100px 120px 100px 100px',
+        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
         alignItems: 'center',
-        padding: '10px 14px',
+        padding: '12px 16px',
         borderBottom: '1px solid var(--border)',
         transition: 'background .1s',
         cursor: 'pointer'
@@ -34,17 +36,25 @@ const Row = ({ initials, name, email, manager, roleDefault }) => {
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>{email}</div>
         </div>
       </div>
-      <div>
-        <select className='fi' style={{ padding: '4px 7px', fontSize: 11.5 }} value={role} onChange={e => setRole(e.target.value)}>
-          <option>Admin</option>
-          <option>Manager</option>
-          <option>CFO</option>
-          <option>Director</option>
-          <option>Employee</option>
-        </select>
+      <div style={{ fontSize: 13, color: 'var(--text)', padding: '4px 0' }}>
+        {role}
       </div>
-      <div style={{ fontSize: 12, color: manager === '—' ? 'var(--text3)' : 'var(--text2)' }}>{manager}</div>
-      <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)' }}>{email.split('@')[0]}@…</div>
+      <div style={{ padding: '4px 0' }}>
+        <span style={{
+          display: 'inline-block',
+          fontSize: 12,
+          color: managerTextColor,
+          background: manager ? 'rgba(56, 189, 248, 0.15)' : 'rgba(160, 174, 192, 0.2)',
+          border: manager ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid rgba(160, 174, 192, 0.35)',
+          borderRadius: 999,
+          padding: '2px 9px',
+          minWidth: 80,
+          textAlign: 'center'
+        }}>
+          {managerText}
+        </span>
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-m)', padding: '4px 0' }}>{email.split('@')[0]}@…</div>
       <div>
         <button type='button' className='btn bg' style={{ padding: '4px 9px', fontSize: 11 }} onClick={handleSendPassword}>
           Send pwd
@@ -138,8 +148,8 @@ const AdminUsers = () => {
           + Invite user
         </button>
       </div>
-      <div className='two rb-two-col'>
-        <div className='panel'>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className='panel' style={{ width: '100%' }}>
           <div className='ph2'>
             <div className='pt2'>All users</div>
             <span className='tag'>{allUsers.length} members</span>
@@ -147,7 +157,7 @@ const AdminUsers = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 100px 120px 100px 100px',
+              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
               padding: '8px 14px',
               borderBottom: '1px solid var(--border)'
             }}
@@ -161,13 +171,15 @@ const AdminUsers = () => {
           <div>
             {allUsers.map((user, idx) => {
               const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+              const managerUser = allUsers.find(u => u.email === user.manager)
+              const managerDisplay = managerUser ? `${managerUser.name} (${managerUser.email})` : (user.manager || 'null')
               return (
                 <Row
                   key={idx}
                   initials={initials}
                   name={user.name}
                   email={user.email}
-                  manager='—'
+                  manager={managerDisplay}
                   roleDefault={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                 />
               )
@@ -175,11 +187,11 @@ const AdminUsers = () => {
           </div>
         </div>
 
-        <div className='panel'>
+        <div className='panel' style={{ width: '100%', padding: '12px 14px' }}>
           <div className='ph2'>
-            <div className='pt2'>IS_MANAGER_APPROVER flag</div>
+            <div className='pt2' style={{ fontSize: 14 }}>IS_MANAGER_APPROVER</div>
           </div>
-          <div className='pb'>
+          <div className='pb' style={{ padding: '0' }}>
             <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 14 }}>
               When ON: employee&apos;s direct manager must approve their expense <em>first</em>, before the formal chain begins.
             </div>
@@ -197,11 +209,11 @@ const AdminUsers = () => {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 10,
-                      padding: '11px 13px',
+                      gap: 8,
+                      padding: '8px 10px',
                       background: 'var(--surface2)',
                       border: '1px solid var(--border)',
-                      borderRadius: 8
+                      borderRadius: 6
                     }}
                   >
                     <div className='av' style={{ width: 26, height: 26, fontSize: 9, background: gradients[idx % gradients.length] }}>
@@ -209,7 +221,7 @@ const AdminUsers = () => {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13 }}>{u.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text2)' }}>Manager: Assigned</div>
+                      <div style={{ fontSize: 11, color: 'var(--text2)' }}>Manager: {u.manager || 'null'}</div>
                     </div>
                     <Toggle key={u.email} />
                   </div>
